@@ -1,0 +1,23 @@
+{
+	"name": "stereotype-client",
+	"version": "0.0.1",
+	"description": "A simple client for Cimpress' Stereotype service.",
+	"main": "src/index.js",
+	"scripts": {
+		"test": "grunt test"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Cimpress-MCP/stereotype-client.git"
+	},
+	"keywords": [ "cimpress", "stereotype" ],
+	"author": "Ivaylo Novakov <inovakov@gmail.com>",
+	"license": "Apache-2.0",
+	"bugs": {
+		"url": "https://github.com/Cimpress-MCP/stereotype-client/issues"
+	},
+	"homepage": "https://github.com/Cimpress-MCP/stereotype-client#readme",
+	"dependencies": {
+		"superagent": "^3.6.0"
+	}
+}
