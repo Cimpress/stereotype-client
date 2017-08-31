@@ -34,7 +34,7 @@ class StereotypeClient {
       req.set('x-cimpress-read-permission', `fulfillers:${self.fulfillerId}:create`);
       req.set('x-cimpress-write-permission', `fulfillers:${self.fulfillerId}:create`);
       return req;
-    }
+    };
   }
 
   /**
@@ -107,4 +107,3 @@ class StereotypeClient {
 }
 
 module.exports = StereotypeClient;
-
