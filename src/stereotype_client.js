@@ -20,13 +20,16 @@ class StereotypeClient {
    * Instantiates a StereotypeClient, ready to work with templates.
    *
    * @accessToken Auth0 authentication token
-   * @idFulfiller The id of the fulfiller we would like to access
+   * @idFulfiller The id of the fulfiller you would like to access
    */
   constructor(accessToken, idFulfiller) {
     this.accessToken = accessToken;
     this.fulfillerId = idFulfiller;
   }
 
+  /**
+   * A simple middleware layer that inserts permission headers needed for write operations.
+   */
   _mwCimpressHeaders() {
     let self = this;
     return function() {
@@ -38,7 +41,7 @@ class StereotypeClient {
   }
 
   /**
-   * Returns a JSON object with two fields:
+   * Returns a promise with a JSON object with two fields:
    * - templateType: text/dust, text/mustache, text/handlebars, etc.
    * - templateBody: the template itself
    */
@@ -63,9 +66,11 @@ class StereotypeClient {
    * @bodyType The content type of the template, e.g. text/handlebars
    */
   putTemplate(idTemplate, bodyTemplate, bodyType) {
-    // Validate the body type:
+    // Validate the body type, err via a Promise:
     if (Object.values(BODY_TYPES).indexOf(bodyType) === -1) {
-      throw new Error('Invalid body type: ' + bodyType);
+      return new Promise((resolve, reject) => {
+        reject(new Error('Invalid body type: ' + bodyType));
+      });
     }
 
     return request.put(TEMPLATES_URL + idTemplate)
@@ -75,12 +80,12 @@ class StereotypeClient {
       .send(bodyTemplate)
       .then(
         (res) => res.status,
-        (err) => Promise.reject(new Error('Unable to create/update template: ' + err.message)) // Promise.reject(err)
+        (err) => Promise.reject(new Error('Unable to create/update template: ' + err.message))
       );
   }
 
   /**
-   * Returns a promise that returns a boolean result or throws an error.
+   * Returns the status of the service as a boolean (alive/dead) (via a promise).
    */
   livecheck() {
     return request
@@ -93,7 +98,7 @@ class StereotypeClient {
   }
 
   /**
-   * Returns the swagger file of the service.
+   * Returns the swagger file of the service (via a promise).
    */
   getSwagger() {
     return request

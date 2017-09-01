@@ -1,27 +1,31 @@
 'use strict';
 
-const sinon = require("sinon");
-const nock = require('nock');
 const chai = require('chai');
 const expect = chai.expect;
-const StereotypeClient = require("../src/stereotype_client");
+const chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
+const StereotypeClient = require('../src/stereotype_client');
 
-describe("Stereotype client", function() {
+describe('Stereotype client', function() {
 
   this.timeout(10000);
 
-  let token = '';
-
+  let token = 'demo_Auth0_v2_token';
   let client = new StereotypeClient(token, '*');
 
-  describe("gets Swagger", function() {
-
-    it("fulfillerId", function() {
-      client.getSwagger().then(
-        (swagger) => expect(swagger).to.have.property("title", "Stereotype")
-      );
-    });
-
-  });
+  // NOTE These are just examples, as they make network calls. To be replaced.
+  // describe("livecheck", function() {
+  //   it('is alive', function() {
+  //     let statusPromise = client.livecheck();
+  //     return expect(statusPromise).to.eventually.equal(true);
+  //   });
+  // });
+  //
+  // describe("get Swagger", function() {
+  //   it('has correct title', function() {
+  //     let swaggerPromise = client.getSwagger();
+  //     return swaggerPromise.then((swagger) => expect(swagger.info.title).to.equal('Stereotype'));
+  //   });
+  // });
 
 });
