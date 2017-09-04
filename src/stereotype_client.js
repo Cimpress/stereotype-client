@@ -2,17 +2,7 @@
 
 var request = require('superagent');
 
-const BASE_URL = 'https://stereotype.trdlnk.cimpress.io/';
-const VERSION = 'v1';
-const TEMPLATES_URL = BASE_URL + VERSION + '/templates/';
-const MATERIALIZATIONS_URL = BASE_URL + VERSION + '/materializations/';
-const MATERIALIZATIONS = 'materializations/';
-
-const BODY_TYPES = {
-  dust: 'text/dust',
-  mustache: 'text/mustache',
-  handlebars: 'text/handlebars'
-};
+const conf = require('./conf');
 
 class StereotypeClient {
 
@@ -47,7 +37,7 @@ class StereotypeClient {
    */
   getTemplate(idTemplate) {
     return request
-      .get(TEMPLATES_URL + idTemplate)
+      .get(conf.TEMPLATES_URL + idTemplate)
       .set('Authorization', 'Bearer ' + this.accessToken)
       .then(
         (res) => ({
@@ -67,13 +57,13 @@ class StereotypeClient {
    */
   putTemplate(idTemplate, bodyTemplate, bodyType) {
     // Validate the body type, err via a Promise:
-    if (Object.values(BODY_TYPES).indexOf(bodyType) === -1) {
+    if (Object.values(conf.BODY_TYPES).indexOf(bodyType) === -1) {
       return new Promise((resolve, reject) => {
         reject(new Error('Invalid body type: ' + bodyType));
       });
     }
 
-    return request.put(TEMPLATES_URL + idTemplate)
+    return request.put(conf.TEMPLATES_URL + idTemplate)
       .set('Authorization', 'Bearer ' + this.accessToken)
       .set('Content-Type', bodyType)
       .use(this._mwCimpressHeaders())
@@ -89,7 +79,7 @@ class StereotypeClient {
    */
   livecheck() {
     return request
-      .get(BASE_URL + 'livecheck')
+      .get(conf.BASE_URL + 'livecheck')
       .set('Authorization', 'Bearer ' + this.accessToken)
       .then(
         (res) => res && res.status == 200,
@@ -102,7 +92,7 @@ class StereotypeClient {
    */
   getSwagger() {
     return request
-      .get(BASE_URL + VERSION + '/swagger.json')
+      .get(conf.BASE_URL + conf.VERSION + '/swagger.json')
       .set('Authorization', 'Bearer ' + this.accessToken)
       .then(
         (res) => res.body,
