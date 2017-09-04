@@ -49,23 +49,33 @@ class StereotypeClient {
   }
 
   /**
-   * Create or update a template.
+   * Create or update a template. When bodyTemplate is null only the permissions are updated.
    *
    * @idTemplate The name of the template we want to create or update.
    * @bodyTemplate The body of the template.
-   * @bodyType The content type of the template, e.g. text/handlebars
+   * @contentType The content type of the template, e.g. text/handlebars. Required when bodyTemplate is passed.
+   * @xReadPermission Set a custom read permission. Optional.
+   * @xWritePermission Set a custom write permission. Optional.
    */
-  putTemplate(idTemplate, bodyTemplate, bodyType) {
+  putTemplate(idTemplate, bodyTemplate = null, contentType = null, xReadPermission = null, xWritePermission = null) {
     // Validate the body type, err via a Promise:
-    if (Object.values(conf.BODY_TYPES).indexOf(bodyType) === -1) {
+    if (bodyTemplate && Object.values(conf.BODY_TYPES).indexOf(contentType) === -1) {
       return new Promise((resolve, reject) => {
-        reject(new Error('Invalid body type: ' + bodyType));
+        reject(new Error('COntent type is required when passing a template body. Invalid body type: ' + contentType));
       });
     }
 
-    return request.put(conf.TEMPLATES_URL + idTemplate)
+    let requestAction;
+    if (bodyTemplate)
+      // We have a body - we can use the PUT endpoint.
+      requestAction = request.put(conf.TEMPLATES_URL + idTemplate);
+    else
+      // We only have permission - we can use the PATCH endpoint and avoid uploading the same body again.
+      requestAction = request.patch(conf.TEMPLATES_URL + idTemplate);
+
+    return requestAction
       .set('Authorization', 'Bearer ' + this.accessToken)
-      .set('Content-Type', bodyType)
+      .set('Content-Type', contentType)
       .use(this._mwCimpressHeaders())
       .send(bodyTemplate)
       .then(

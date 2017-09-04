@@ -48,7 +48,8 @@ describe('Stereotype client', function() {
       });
 
       it('creates a new valid template');
-      it('updates an existing template');
+      it('updates an existing template - body and permissions');
+      it('updates an existing template - permissions only (hit the PATCH endpoint)');
       it('fails to create an invalid template');
       it('fails to create a template with bad permissions');
     });
@@ -56,6 +57,7 @@ describe('Stereotype client', function() {
 
   describe('Materialize', function() {
     it('materializaes a template');
+    // TODO Add more tests.
   });
 
   describe("livecheck", function() {
@@ -65,7 +67,7 @@ describe('Stereotype client', function() {
       return expect(client.livecheck()).to.eventually.equal(true);
     });
 
-    it('throws an error', function() {
+    it('handles 500', function() {
       mock.get('/livecheck').reply(500);
       return expect(client.livecheck()).to.be.rejected;
     });
@@ -82,7 +84,7 @@ describe('Stereotype client', function() {
       return client.getSwagger().then((swagger) => expect(swagger.info.title).to.equal('Stereotype'));
     });
 
-    it('returns server error', function() {
+    it('handles 500', function() {
       mock.get(`/${conf.VERSION}/swagger.json`).reply(500);
       return expect(client.getSwagger()).to.be.rejected;
     });
