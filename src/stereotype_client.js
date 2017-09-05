@@ -108,7 +108,7 @@ class StereotypeClient {
       .then(
         (res) => {
           if (getMaterializationId) {
-            // the 1 is for the leading `/`:
+            // the `+ 1` is for the leading `/`:
             let preStringLen = conf.VERSION.length + conf.MATERIALIZATIONS.length + 1;
             return res.headers.location.substring(preStringLen);
           } else {
@@ -130,12 +130,14 @@ class StereotypeClient {
       .set('Authorization', 'Bearer ' + this.accessToken)
       .then(
         (res) => (res.text),
-        (err) => Promise.reject(new Error('Unable to materialize template: ' + err.message))
+        (err) => Promise.reject(new Error('Unable to get materialization: ' + err.message))
       );
   }
 
   /**
    * Returns the status of the service as a boolean (alive/dead) (via a promise).
+   *
+   * @returns boolean
    */
   livecheck() {
     return request

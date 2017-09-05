@@ -1,3 +1,12 @@
 {
-	"esversion": 6
+	"esversion": 6,
+	"node": true,
+	"globals": {
+		"describe": true,
+		"it": true,
+		"before": true,
+		"beforeEach": true,
+		"after": true,
+		"afterEach": true
+	}
 }
