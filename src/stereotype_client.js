@@ -30,6 +30,13 @@ class StereotypeClient {
     };
   }
 
+  _isValidBodyType(bodyType) {
+    for (var key in conf.BODY_TYPES) {
+      if (conf.BODY_TYPES[key] === bodyType) return true;
+    }
+    return false;
+  }
+
   /**
    * Returns a promise with a JSON object with two fields:
    * - templateType: text/dust, text/mustache, text/handlebars, etc.
@@ -62,7 +69,7 @@ class StereotypeClient {
    */
   putTemplate(idTemplate, bodyTemplate = null, contentType = null, xReadPermission = null, xWritePermission = null) {
     // Validate the body type, err via a Promise:
-    if (bodyTemplate && Object.values(conf.BODY_TYPES).indexOf(contentType) === -1) {
+    if (bodyTemplate && this._isValidBodyType()) {
       return new Promise((resolve, reject) => {
         reject(new Error('Content type is required when passing a template body. Invalid body type: ' + contentType));
       });
