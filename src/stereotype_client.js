@@ -20,12 +20,12 @@ class StereotypeClient {
   /**
    * A simple middleware layer that inserts permission headers needed for write operations.
    */
-  _mwCimpressHeaders() {
+  _mwCimpressHeaders(read = null, write = null) {
     let self = this;
     return function() {
       let req = arguments[0];
-      req.set('x-cimpress-read-permission', `fulfillers:${self.fulfillerId}:create`);
-      req.set('x-cimpress-write-permission', `fulfillers:${self.fulfillerId}:create`);
+      req.set('x-cimpress-read-permission', read ? read : `fulfillers:${self.fulfillerId}:create`);
+      req.set('x-cimpress-write-permission', write ? write : `fulfillers:${self.fulfillerId}:create`);
       return req;
     };
   }
@@ -79,7 +79,7 @@ class StereotypeClient {
     return requestAction
       .set('Authorization', 'Bearer ' + this.accessToken)
       .set('Content-Type', contentType)
-      .use(this._mwCimpressHeaders())
+      .use(this._mwCimpressHeaders(xReadPermission, xWritePermission))
       .send(bodyTemplate)
       .then(
         (res) => res.status,
