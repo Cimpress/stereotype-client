@@ -9,8 +9,8 @@ class StereotypeClient {
   /**
    * Instantiates a StereotypeClient, ready to work with templates.
    *
-   * @accessToken Auth0 authentication token
-   * @idFulfiller The id of the fulfiller you would like to access
+   * @param {string} accessToken Auth0 authentication token
+   * @param {string} idFulfiller The id of the fulfiller you would like to access
    */
   constructor(accessToken, idFulfiller) {
     this.accessToken = accessToken;
@@ -34,6 +34,8 @@ class StereotypeClient {
    * Returns a promise with a JSON object with two fields:
    * - templateType: text/dust, text/mustache, text/handlebars, etc.
    * - templateBody: the template itself
+   *
+   * @param {string} idTemplate
    */
   getTemplate(idTemplate) {
     return request
@@ -51,17 +53,18 @@ class StereotypeClient {
   /**
    * Create or update a template. When bodyTemplate is null only the permissions are updated.
    *
-   * @idTemplate The name of the template we want to create or update.
-   * @bodyTemplate The body of the template.
-   * @contentType The content type of the template, e.g. text/handlebars. Required when bodyTemplate is passed.
-   * @xReadPermission Set a custom read permission. Optional.
-   * @xWritePermission Set a custom write permission. Optional.
+   * @param {string} idTemplate The name of the template we want to create or update.
+   * @param {string} bodyTemplate The body of the template.
+   * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
+   *    when bodyTemplate is passed.
+   * @param {string} xReadPermission Set a custom read permission. Optional.
+   * @param {string} xWritePermission Set a custom write permission. Optional.
    */
   putTemplate(idTemplate, bodyTemplate = null, contentType = null, xReadPermission = null, xWritePermission = null) {
     // Validate the body type, err via a Promise:
     if (bodyTemplate && Object.values(conf.BODY_TYPES).indexOf(contentType) === -1) {
       return new Promise((resolve, reject) => {
-        reject(new Error('COntent type is required when passing a template body. Invalid body type: ' + contentType));
+        reject(new Error('Content type is required when passing a template body. Invalid body type: ' + contentType));
       });
     }
 
@@ -70,7 +73,7 @@ class StereotypeClient {
       // We have a body - we can use the PUT endpoint.
       requestAction = request.put(conf.TEMPLATES_URL + idTemplate);
     else
-      // We only have permission - we can use the PATCH endpoint and avoid uploading the same body again.
+      // We only have permission - we can use the PATCH endpoint and avoid uploading the body again.
       requestAction = request.patch(conf.TEMPLATES_URL + idTemplate);
 
     return requestAction
