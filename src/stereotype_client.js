@@ -88,6 +88,53 @@ class StereotypeClient {
   }
 
   /**
+   * Creates a template materialization by populating a template with data.
+   *
+   * @param {string} idTemplate
+   * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
+   * @param {number} timeout Timeout value (ms) of how long the service should wait for a single link
+   *    to be resolved before timing out. Default is 5000ms
+   * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
+   *    body. We can use that id later to fetch the materialized template without resending the properties.
+   *    Defaults to false.
+   */
+  materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
+    return request
+      .post(conf.TEMPLATES_URL + idTemplate + conf.MATERIALIZATIONS)
+      .set('Authorization', 'Bearer ' + this.accessToken)
+      .set('Content-Type', 'application/json')
+      .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000)
+      .send(propertyBag)
+      .then(
+        (res) => {
+          if (getMaterializationId) {
+            // the 1 is for the leading `/`:
+            let preStringLen = conf.VERSION.length + conf.MATERIALIZATIONS.length + 1;
+            return res.headers.location.substring(preStringLen);
+          } else {
+            return res.text;
+          }
+        },
+        (err) => Promise.reject(new Error('Unable to materialize template: ' + err.message))
+      );
+  }
+
+  /**
+   * Get an existing template materialization.
+   *
+   * @param {string} idMaterialization The id of the materialization, as returned by `materialize`.
+   */
+  getMaterialization(idMaterialization) {
+    return request
+      .get(conf.MATERIALIZATIONS_URL + idMaterialization)
+      .set('Authorization', 'Bearer ' + this.accessToken)
+      .then(
+        (res) => (res.text),
+        (err) => Promise.reject(new Error('Unable to materialize template: ' + err.message))
+      );
+  }
+
+  /**
    * Returns the status of the service as a boolean (alive/dead) (via a promise).
    */
   livecheck() {
