@@ -5,6 +5,7 @@ const chai = require('chai');
 const expect = chai.expect;
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
+
 const StereotypeClient = require('../src/stereotype_client');
 const conf = require('../src/conf');
 
@@ -15,11 +16,14 @@ describe('Stereotype client', function() {
   let token = 'demo_Auth0_v2_token';
   let fulfillerId = 1234;
   let client = new StereotypeClient(token, fulfillerId);
-  let mock;
+  let nockRequest;
+  let templateName = 'testTemplate';
+  var templBody = 'Hello {{name}}.';
+  var contentType = 'text/mustache';
 
   beforeEach(function() {
     // All we need is the right URL and a valid auth token.
-    mock = nock(conf.BASE_URL, {
+    nockRequest = nock(conf.BASE_URL, {
       reqheaders: {
         'Authorization': 'Bearer demo_Auth0_v2_token'
       }
@@ -28,17 +32,40 @@ describe('Stereotype client', function() {
 
   describe('Template', function() {
 
-    describe('Read operations', function() {
-      it('reads a template');
-      it('fails to read a template due to bad permissions');
-      it('fails to read an inexisting template');
+    describe('Read', function() {
+
+      it('reads a template', function() {
+        nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(200, templBody, {
+            'content-type': contentType
+          });
+
+        return client.getTemplate(templateName).then((tpl) => {
+          expect(tpl.templateBody).to.equal(templBody);
+          expect(tpl.templateType).to.equal(contentType);
+        });
+      });
+
+      it('fails to read a nonexistent template', function() {
+        nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(404);
+
+        return expect(client.getTemplate(templateName)).to.eventually.be.rejected;
+      });
+
+      it('fails to read a template due to bad permissions', function() {
+        nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(403);
+
+        return expect(client.getTemplate(templateName)).to.eventually.be.rejected;
+      });
     });
 
-    describe('Write operations', function() {
+    describe('Write', function() {
 
       beforeEach(function() {
         // Here we need to also have headers with the right COAM permissions.
-        mock = nock(conf.BASE_URL, {
+        nockRequest = nock(conf.BASE_URL, {
           reqheaders: {
             'Authorization': 'Bearer demo_Auth0_v2_token',
             'x-cimpress-read-permission': `fulfillers:${fulfillerId}:create`,
@@ -47,35 +74,53 @@ describe('Stereotype client', function() {
         });
       });
 
-      it('creates a new valid template');
-      it('updates an existing template - body and permissions');
-      it('updates an existing template - permissions only (hit the PATCH endpoint)');
-      it('fails to create an invalid template');
-      it('fails to create a template with bad permissions');
-    });
-  });
+      it('creates a new valid template', function() {
+        nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(201);
 
-  describe('Materialize', function() {
-    it('materializaes a template');
-    // TODO Add more tests.
+        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.succeed;
+      });
+
+      it('updates an existing template - body', function() {
+        nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(200);
+
+        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.succeed;
+      });
+
+      it('updates an existing template - permissions only (hit the PATCH endpoint)', function() {
+        nockRequest.patch(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(200);
+
+        return expect(client.putTemplate(templateName, null, null, 'custom-r-perm', 'custom-w-perm')).to.eventually.succeed;
+      });
+
+      it('fails to create a template with bad permissions', function() {
+        nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(403);
+
+        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.rejected;
+      });
+    });
+
   });
 
   describe("livecheck", function() {
 
     it('is alive', function() {
-      mock.get('/livecheck').reply(200);
+      nockRequest.get('/livecheck').reply(200);
       return expect(client.livecheck()).to.eventually.equal(true);
     });
 
     it('handles 500', function() {
-      mock.get('/livecheck').reply(500);
+      nockRequest.get('/livecheck').reply(500);
       return expect(client.livecheck()).to.be.rejected;
     });
   });
 
   describe("get Swagger", function() {
     it('has correct title', function() {
-      mock.get(`/${conf.VERSION}/swagger.json`).reply(200, {
+      nockRequest.get(`/${conf.VERSION}/swagger.json`).reply(200, {
         info: {
           title: 'Stereotype'
         }
@@ -85,7 +130,7 @@ describe('Stereotype client', function() {
     });
 
     it('handles 500', function() {
-      mock.get(`/${conf.VERSION}/swagger.json`).reply(500);
+      nockRequest.get(`/${conf.VERSION}/swagger.json`).reply(500);
       return expect(client.getSwagger()).to.be.rejected;
     });
   });
