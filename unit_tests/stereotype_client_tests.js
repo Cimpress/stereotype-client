@@ -103,6 +103,28 @@ describe('Stereotype client', function() {
       });
     });
 
+    describe('Materialize', function() {
+      it('materializes a template', function() {
+        let materializedBody = 'Hello Customer.';
+        nockRequest.post(`/${conf.VERSION}/templates/${templateName}${conf.MATERIALIZATIONS}`)
+          .reply(200, materializedBody, {
+            'content-type': contentType
+          });
+
+        return client.materialize(templateName).then((tpl) => expect(tpl).to.equal(materializedBody));
+      });
+
+      it('fetches a template that was previously materialized', function() {
+        let materializedBody = 'Hello Customer.';
+        let materializationId = 'test_mat_id';
+        nockRequest.get(`/${conf.VERSION}/materializations/${materializationId}`)
+          .reply(200, materializedBody, {
+            'content-type': contentType
+          });
+
+        return client.getMaterialization(materializationId).then((tpl) => expect(tpl).to.equal(materializedBody));
+      });
+    });
   });
 
   describe("livecheck", function() {
