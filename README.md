@@ -1,4 +1,5 @@
-# Cimpress Stereotype Client [![Build Status](https://travis-ci.org/Cimpress-MCP/stereotype-client.svg?branch=master)](https://travis-ci.org/Cimpress-MCP/stereotype-client)
+# Cimpress Stereotype Client [![Build Status](https://travis-ci.org/Cimpress-MCP/stereotype-client.svg?branch=master)](https://travis-ci.org/Cimpress-MCP/stereotype-client) [![NPM version](https://img.shields.io/npm/v/stereotype-client.svg)](https://www.npmjs.com/package/stereotype-client)
+
 
 This project contains a client library for Cimpress' Stereotype service.
 
