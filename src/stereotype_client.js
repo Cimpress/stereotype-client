@@ -76,12 +76,13 @@ class StereotypeClient {
     }
 
     let requestAction;
-    if (bodyTemplate)
+    if (bodyTemplate) {
       // We have a body - we can use the PUT endpoint.
       requestAction = request.put(conf.TEMPLATES_URL + idTemplate);
-    else
+    } else {
       // We only have permission - we can use the PATCH endpoint and avoid uploading the body again.
       requestAction = request.patch(conf.TEMPLATES_URL + idTemplate);
+    }
 
     return requestAction
       .set('Authorization', 'Bearer ' + this.accessToken)
