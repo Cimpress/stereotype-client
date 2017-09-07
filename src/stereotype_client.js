@@ -69,7 +69,7 @@ class StereotypeClient {
    */
   putTemplate(idTemplate, bodyTemplate = null, contentType = null, xReadPermission = null, xWritePermission = null) {
     // Validate the body type, err via a Promise:
-    if (bodyTemplate && this._isValidBodyType()) {
+    if (bodyTemplate && this._isValidBodyType(contentType)) {
       return new Promise((resolve, reject) => {
         reject(new Error('Content type is required when passing a template body. Invalid body type: ' + contentType));
       });
