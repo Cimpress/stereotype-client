@@ -10,22 +10,21 @@ class StereotypeClient {
    * Instantiates a StereotypeClient, ready to work with templates.
    *
    * @param {string} accessToken Auth0 authentication token
-   * @param {string} idFulfiller The id of the fulfiller you would like to access
+   * @param {string} idFulfiller Deprecated - this field is not used anymore but it's left as optional for backwards compatibility.
    */
-  constructor(accessToken, idFulfiller) {
+  constructor(accessToken, idFulfiller = null) {
     this.accessToken = accessToken;
-    this.fulfillerId = idFulfiller;
   }
 
   /**
    * A simple middleware layer that inserts permission headers needed for write operations.
    */
-  _mwCimpressHeaders(read = null, write = null) {
+  _mwCimpressHeaders(templateId, read, write) {
     let self = this;
     return function() {
       let req = arguments[0];
-      req.set('x-cimpress-read-permission', read ? read : `fulfillers:${self.fulfillerId}:create`);
-      req.set('x-cimpress-write-permission', write ? write : `fulfillers:${self.fulfillerId}:create`);
+      req.set('x-cimpress-read-permission', read ? read : `stereotype-templates:${templateId}:read:templates`);
+      req.set('x-cimpress-write-permission', write ? write : `stereotype-templates:${templateId}:create:templates`);
       return req;
     };
   }
@@ -69,7 +68,7 @@ class StereotypeClient {
    */
   putTemplate(idTemplate, bodyTemplate = null, contentType = null, xReadPermission = null, xWritePermission = null) {
     // Validate the body type, err via a Promise:
-    if (bodyTemplate && this._isValidBodyType(contentType)) {
+    if (bodyTemplate && !this._isValidBodyType(contentType)) {
       return new Promise((resolve, reject) => {
         reject(new Error('Content type is required when passing a template body. Invalid body type: ' + contentType));
       });
@@ -87,7 +86,7 @@ class StereotypeClient {
     return requestAction
       .set('Authorization', 'Bearer ' + this.accessToken)
       .set('Content-Type', contentType)
-      .use(this._mwCimpressHeaders(xReadPermission, xWritePermission))
+      .use(this._mwCimpressHeaders(idTemplate, xReadPermission, xWritePermission))
       .send(bodyTemplate)
       .then(
         (res) => res.status,
