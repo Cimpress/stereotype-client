@@ -13,7 +13,9 @@ class StereotypeClient {
    * @param {string} idFulfiller Deprecated - this field is not used anymore but it's left as optional for backwards compatibility.
    */
   constructor(accessToken, idFulfiller = null) {
-    this.accessToken = accessToken;
+    this.accessToken = String(accessToken);
+    // Strip any token prefix, e.g. 'Bearer '. If no prefix is found this code won't have any effect.
+    this.accessToken = this.accessToken.substring(this.accessToken.indexOf(' ') + 1);
   }
 
   /**
