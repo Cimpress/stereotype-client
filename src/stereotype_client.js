@@ -11,11 +11,29 @@ class StereotypeClient {
    *
    * @param {string} accessToken Auth0 authentication token
    * @param {string} idFulfiller Deprecated - this field is not used anymore but it's left as optional for backwards compatibility.
+   * @param {string} xray An instance of AWS X-Ray (npm package aws-xray-sdk-core)
    */
-  constructor(accessToken, idFulfiller = null) {
+  constructor(accessToken, idFulfiller = null, xray = null) {
     this.accessToken = String(accessToken);
     // Strip any token prefix, e.g. 'Bearer '. If no prefix is found this code won't have any effect.
     this.accessToken = this.accessToken.substring(this.accessToken.indexOf(' ') + 1);
+
+    this.xray = xray || StereotypeClient._getDummyXray();
+  }
+
+  /**
+   * Provides a stub implementation of the X-Ray client. All used functions must be mocked here.
+   */
+  static _getDummyXray() {
+    return {
+      captureAsyncFunc: function(annot, callback) {
+        let subsegment = {
+          addAnnotation: function(annot, annotParam) {},
+          close: function(err = null) {}
+        };
+        callback(subsegment);
+      }
+    };
   }
 
   /**
@@ -107,24 +125,38 @@ class StereotypeClient {
    *    Defaults to false.
    */
   materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
-    return request
-      .post(conf.TEMPLATES_URL + idTemplate + conf.MATERIALIZATIONS)
-      .set('Authorization', 'Bearer ' + this.accessToken)
-      .set('Content-Type', 'application/json')
-      .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000)
-      .send(propertyBag)
-      .then(
-        (res) => {
-          if (getMaterializationId) {
-            // the `+ 1` is for the leading `/`:
-            let preStringLen = conf.VERSION.length + conf.MATERIALIZATIONS.length + 1;
-            return res.headers.location.substring(preStringLen);
-          } else {
-            return res.text;
-          }
-        },
-        (err) => Promise.reject(new Error('Unable to materialize template: ' + err.message))
-      );
+    let self = this;
+
+    return new Promise((resolve, reject) => {
+
+      self.xray.captureAsyncFunc('Stereotype.getTemplateMaterialization', function(subsegment) {
+        subsegment.addAnnotation('StereotypeTemplate', idTemplate);
+
+        request
+          .post(conf.TEMPLATES_URL + idTemplate + conf.MATERIALIZATIONS)
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .set('Content-Type', 'application/json')
+          .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000)
+          .send(propertyBag)
+          .then(
+            (res) => {
+              subsegment.close();
+              if (getMaterializationId) {
+                // the `+ 1` is for the leading `/`:
+                let preStringLen = conf.VERSION.length + conf.MATERIALIZATIONS.length + 1;
+                resolve(res.headers.location.substring(preStringLen));
+              } else {
+                resolve(res.text);
+              }
+            },
+            (err) => {
+              subsegment.close(err);
+              reject(new Error('Unable to materialize template: ' + err.message));
+            }
+          ); // Closes request chain
+
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
   }
 
   /**
