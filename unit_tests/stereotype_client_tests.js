@@ -114,6 +114,17 @@ describe('Stereotype client', function() {
         return client.materialize(templateName).then((tpl) => expect(tpl).to.equal(materializedBody));
       });
 
+      it('materializes a template to a materialization id', function() {
+        let matId = 'a162538a-bcf2-4b43-9d53-12cb0dd04b7b';
+        let propertyBag = {};
+        nockRequest.post(`/${conf.VERSION}/templates/${templateName}${conf.MATERIALIZATIONS}`)
+          .reply(200, matId, {
+            'location': `/v1/materializations/${matId}`
+          });
+
+        return client.materialize(templateName, propertyBag, 5000, true).then((tpl) => expect(tpl).to.equal(matId));
+      });
+
       it('fetches a template that was previously materialized', function() {
         let materializedBody = 'Hello Customer.';
         let materializationId = 'test_mat_id';
@@ -124,10 +135,17 @@ describe('Stereotype client', function() {
 
         return client.getMaterialization(materializationId).then((tpl) => expect(tpl).to.equal(materializedBody));
       });
+
+      it('fails to materialize a template with bad permissions', function() {
+        nockRequest.post(`/${conf.VERSION}/templates/${templateName}${conf.MATERIALIZATIONS}`)
+          .reply(403);
+
+        return expect(client.materialize(templateName)).to.eventually.be.rejected;
+      });
     });
   });
 
-  describe("livecheck", function() {
+  describe('Livecheck', function() {
 
     it('is alive', function() {
       nockRequest.get('/livecheck').reply(200);
@@ -140,7 +158,7 @@ describe('Stereotype client', function() {
     });
   });
 
-  describe("get Swagger", function() {
+  describe('Get Swagger', function() {
     it('has correct title', function() {
       nockRequest.get(`/${conf.VERSION}/swagger.json`).reply(200, {
         info: {
