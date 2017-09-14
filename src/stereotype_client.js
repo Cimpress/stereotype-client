@@ -39,11 +39,11 @@ class StereotypeClient {
   /**
    * A simple middleware layer that inserts permission headers needed for write operations.
    */
-  static _mwCimpressHeaders(templateId, read, write) {
+  static _mwCimpressHeaders(templateId) {
     return function() {
       let req = arguments[0];
-      req.set('x-cimpress-read-permission', read ? read : `stereotype-templates:${templateId}:read:templates`);
-      req.set('x-cimpress-write-permission', write ? write : `stereotype-templates:${templateId}:create:templates`);
+      req.set('x-cimpress-read-permission', `stereotype-templates:${templateId}:read:templates`);
+      req.set('x-cimpress-write-permission', `stereotype-templates:${templateId}:create:templates`);
       return req;
     };
   }
@@ -82,10 +82,8 @@ class StereotypeClient {
    * @param {string} bodyTemplate The body of the template.
    * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
    *    when bodyTemplate is passed.
-   * @param {string} xReadPermission Set a custom read permission. Optional.
-   * @param {string} xWritePermission Set a custom write permission. Optional.
    */
-  putTemplate(idTemplate, bodyTemplate = null, contentType = null, xReadPermission = null, xWritePermission = null) {
+  putTemplate(idTemplate, bodyTemplate = null, contentType = null) {
     // Validate the body type, err via a Promise:
     if (bodyTemplate && !StereotypeClient._isSupportedBodyType(contentType)) {
       return new Promise((resolve, reject) => {
@@ -105,7 +103,7 @@ class StereotypeClient {
     return requestAction
       .set('Authorization', 'Bearer ' + this.accessToken)
       .set('Content-Type', contentType)
-      .use(StereotypeClient._mwCimpressHeaders(idTemplate, xReadPermission, xWritePermission))
+      .use(StereotypeClient._mwCimpressHeaders(idTemplate))
       .send(bodyTemplate)
       .then(
         (res) => res.status,
