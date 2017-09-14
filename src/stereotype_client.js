@@ -85,26 +85,28 @@ class StereotypeClient {
    */
   putTemplate(idTemplate, bodyTemplate = null, contentType = null) {
     // Validate the body type, err via a Promise:
-    if (bodyTemplate && !StereotypeClient._isSupportedBodyType(contentType)) {
+    if (!StereotypeClient._isSupportedBodyType(contentType)) {
       return new Promise((resolve, reject) => {
-        reject(new Error('Content type is required when passing a template body. Invalid body type: ' + contentType));
+        reject(new Error('Invalid content type: ' + contentType));
       });
     }
 
     let requestAction;
     if (bodyTemplate) {
-      // We have a body - we can use the PUT endpoint.
+      // We have a body - we should use the PUT endpoint.
       requestAction = request.put(conf.TEMPLATES_URL + idTemplate);
     } else {
-      // We only have permission - we can use the PATCH endpoint and avoid uploading the body again.
+      // We only have permissions - we can use the PATCH endpoint and avoid uploading the body again.
       requestAction = request.patch(conf.TEMPLATES_URL + idTemplate);
+      // make sure we send an empty body and not `undefined` or `null`:
+      bodyTemplate = '';
     }
 
     return requestAction
       .set('Authorization', 'Bearer ' + this.accessToken)
       .set('Content-Type', contentType)
       .use(StereotypeClient._mwCimpressHeaders(idTemplate))
-      .send(bodyTemplate)
+      .send(bodyTemplate) // the body is empty anyway, no need for superfluous conditionals
       .then(
         (res) => res.status,
         (err) => Promise.reject(new Error('Unable to create/update template: ' + err.message))
