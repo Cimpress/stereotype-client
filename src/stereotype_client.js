@@ -63,16 +63,35 @@ class StereotypeClient {
    * @param {string} idTemplate
    */
   getTemplate(idTemplate) {
-    return request
-      .get(conf.TEMPLATES_URL + idTemplate)
-      .set('Authorization', 'Bearer ' + this.accessToken)
-      .then(
-        (res) => ({
-          templateType: res.type,
-          templateBody: res.text,
-        }),
-        (err) => Promise.reject(new Error('Unable to get template: ' + err.message))
-      );
+    let self = this;
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.getTemplate', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.TEMPLATES_URL);
+        subsegment.addAnnotation('REST Action', 'GET');
+        subsegment.addAnnotation('Template', idTemplate);
+
+        request
+          .get(conf.TEMPLATES_URL + idTemplate)
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .then(
+            (res) => {
+              subsegment.addAnnotation('Response Code', res.status);
+              subsegment.close();
+              resolve({
+                templateType: res.type,
+                templateBody: res.text,
+              });
+            },
+            (err) => {
+              subsegment.addAnnotation('Response Code', err.status);
+              subsegment.addAnnotation('Error Message', 'Unable to get template: ' + err.message);
+              subsegment.close(err);
+              reject(new Error('Unable to get template: ' + err.message));
+            }
+          );
+
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
   }
 
   /**
@@ -84,25 +103,45 @@ class StereotypeClient {
    *    when bodyTemplate is passed.
    */
   putTemplate(idTemplate, bodyTemplate = null, contentType = null) {
-    // Validate the body type, err via a Promise:
-    if (!StereotypeClient._isSupportedBodyType(contentType)) {
-      return new Promise((resolve, reject) => {
-        reject(new Error('Invalid content type: ' + contentType));
-      });
-    }
+    let self = this;
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.putTemplate', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.TEMPLATES_URL);
+        subsegment.addAnnotation('REST Action', 'PUT');
+        subsegment.addAnnotation('Template', idTemplate);
 
-    // Replace `null` or `undefined` with an empty string body.
-    bodyTemplate = bodyTemplate || '';
+        // Validate the body type, err via a Promise:
+        if (!StereotypeClient._isSupportedBodyType(contentType)) {
+          let err = new Error('Invalid content type: ' + contentType);
+          subsegment.addAnnotation('Error Message', 'Invalid content type: ' + contentType);
+          subsegment.close(err);
+          reject(err);
+        }
 
-    return request.put(conf.TEMPLATES_URL + idTemplate)
-      .set('Authorization', 'Bearer ' + this.accessToken)
-      .set('Content-Type', contentType)
-      .use(StereotypeClient._mwCimpressHeaders(idTemplate))
-      .send(bodyTemplate) // the body is empty anyway, no need for superfluous conditionals
-      .then(
-        (res) => res.status,
-        (err) => Promise.reject(new Error('Unable to create/update template: ' + err.message))
-      );
+        // Replace `null` or `undefined` with an empty string body.
+        bodyTemplate = bodyTemplate || '';
+
+        request.put(conf.TEMPLATES_URL + idTemplate)
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .set('Content-Type', contentType)
+          .use(StereotypeClient._mwCimpressHeaders(idTemplate))
+          .send(bodyTemplate) // the body is empty anyway, no need for superfluous conditionals
+          .then(
+            (res) => {
+              subsegment.addAnnotation('Response Code', res.status);
+              subsegment.close();
+              resolve(res.status);
+            },
+            (err) => {
+              subsegment.addAnnotation('Response Code', err.status);
+              subsegment.addAnnotation('Error Message', 'Unable to create/update template: ' + err.message);
+              subsegment.close(err);
+              reject(new Error('Unable to create/update template: ' + err.message));
+            }
+          );
+
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
   }
 
   /**
@@ -118,11 +157,11 @@ class StereotypeClient {
    */
   materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
     let self = this;
-
     return new Promise((resolve, reject) => {
-
-      self.xray.captureAsyncFunc('Stereotype.getTemplateMaterialization', function(subsegment) {
-        subsegment.addAnnotation('StereotypeTemplate', idTemplate);
+      self.xray.captureAsyncFunc('Stereotype.materialize', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.TEMPLATES_URL + idTemplate + conf.MATERIALIZATIONS);
+        subsegment.addAnnotation('REST Action', 'POST');
+        subsegment.addAnnotation('Template', idTemplate);
 
         request
           .post(conf.TEMPLATES_URL + idTemplate + conf.MATERIALIZATIONS)
@@ -132,6 +171,7 @@ class StereotypeClient {
           .send(propertyBag)
           .then(
             (res) => {
+              subsegment.addAnnotation('Response Code', res.status);
               subsegment.close();
               if (getMaterializationId) {
                 // the `+ 1` is for the leading `/`:
@@ -142,6 +182,8 @@ class StereotypeClient {
               }
             },
             (err) => {
+              subsegment.addAnnotation('Response Code', err.status);
+              subsegment.addAnnotation('Unable to materialize template: ' + err.message);
               subsegment.close(err);
               reject(new Error('Unable to materialize template: ' + err.message));
             }
@@ -157,13 +199,32 @@ class StereotypeClient {
    * @param {string} idMaterialization The id of the materialization, as returned by `materialize`.
    */
   getMaterialization(idMaterialization) {
-    return request
-      .get(conf.MATERIALIZATIONS_URL + idMaterialization)
-      .set('Authorization', 'Bearer ' + this.accessToken)
-      .then(
-        (res) => (res.text),
-        (err) => Promise.reject(new Error('Unable to get materialization: ' + err.message))
-      );
+    let self = this;
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.getMaterialization', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.MATERIALIZATIONS_URL);
+        subsegment.addAnnotation('REST Action', 'GET');
+        subsegment.addAnnotation('Template Materialization', idMaterialization);
+
+        request
+          .get(conf.MATERIALIZATIONS_URL + idMaterialization)
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .then(
+            (res) => {
+              subsegment.addAnnotation('Response Code', res.status);
+              subsegment.close();
+              resolve(res.text);
+            },
+            (err) => {
+              subsegment.addAnnotation('Response Code', err.status);
+              subsegment.addAnnotation('Error Message', 'Unable to get materialization: ' + err.message);
+              subsegment.close(err);
+              reject(new Error('Unable to get materialization: ' + err.message));
+            }
+          );
+
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
   }
 
   /**
@@ -172,26 +233,62 @@ class StereotypeClient {
    * @returns boolean
    */
   livecheck() {
-    return request
-      .get(conf.BASE_URL + 'livecheck')
-      .set('Authorization', 'Bearer ' + this.accessToken)
-      .then(
-        (res) => res && res.status == 200,
-        (err) => Promise.reject(new Error('Unable to get livecheck data: ' + err.message))
-      );
+    let self = this;
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.livecheck', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.BASE_URL + 'livecheck');
+        subsegment.addAnnotation('REST Action', 'GET');
+
+        request
+          .get(conf.BASE_URL + 'livecheck')
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .then(
+            (res) => {
+              subsegment.addAnnotation('Response Code', res.status);
+              subsegment.close();
+              resolve(res && res.status == 200);
+            },
+            (err) => {
+              subsegment.addAnnotation('Response Code', err.status);
+              subsegment.addAnnotation('Error Message', 'Unable to get livecheck data: ' + err.message);
+              subsegment.close(err);
+              reject(new Error('Unable to get livecheck data: ' + err.message));
+            }
+          );
+
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
   }
 
   /**
    * Returns the swagger file of the service (via a promise).
    */
   getSwagger() {
-    return request
-      .get(conf.BASE_URL + conf.VERSION + '/swagger.json')
-      .set('Authorization', 'Bearer ' + this.accessToken)
-      .then(
-        (res) => res.body,
-        (err) => Promise.reject(new Error('Unable to get swagger: ' + err.message))
-      );
+    let self = this;
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.getSwagger', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.BASE_URL + conf.VERSION + '/swagger.json');
+        subsegment.addAnnotation('REST Action', 'GET');
+
+        request
+          .get(conf.BASE_URL + conf.VERSION + '/swagger.json')
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .then(
+            (res) => {
+              subsegment.addAnnotation('Response Code', res.status);
+              subsegment.close();
+              resolve(res.body);
+            },
+            (err) => {
+              subsegment.addAnnotation('Response Code', err.status);
+              subsegment.addAnnotation('Error Message', ('Unable to get swagger: ' + err.message));
+              subsegment.close(err);
+              reject(new Error('Unable to get swagger: ' + err.message));
+            }
+          );
+
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
   }
 }
 
