@@ -91,18 +91,10 @@ class StereotypeClient {
       });
     }
 
-    let requestAction;
-    if (bodyTemplate) {
-      // We have a body - we should use the PUT endpoint.
-      requestAction = request.put(conf.TEMPLATES_URL + idTemplate);
-    } else {
-      // We only have permissions - we can use the PATCH endpoint and avoid uploading the body again.
-      requestAction = request.patch(conf.TEMPLATES_URL + idTemplate);
-      // make sure we send an empty body and not `undefined` or `null`:
-      bodyTemplate = '';
-    }
+    // Replace `null` or `undefined` with an empty string body.
+    bodyTemplate = bodyTemplate || '';
 
-    return requestAction
+    return request.put(conf.TEMPLATES_URL + idTemplate)
       .set('Authorization', 'Bearer ' + this.accessToken)
       .set('Content-Type', contentType)
       .use(StereotypeClient._mwCimpressHeaders(idTemplate))
