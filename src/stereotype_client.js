@@ -36,26 +36,6 @@ class StereotypeClient {
     };
   }
 
-  /**
-   * A simple middleware layer that inserts permission headers needed for write operations.
-   */
-  static _mwCimpressHeaders(templateId) {
-    return function() {
-      let req = arguments[0];
-      req.set('x-cimpress-read-permission', `stereotype-templates:${templateId}:read:templates`);
-      req.set('x-cimpress-write-permission', `stereotype-templates:${templateId}:create:templates`);
-
-      if (this.blacklistHeader) {
-        req.set('x-cimpress-rel-blacklist', this.blacklistHeader);
-      }
-      if (this.whitelistHeader) {
-        req.set('x-cimpress-rel-whitelist', this.whitelistHeader);
-      }
-
-      return req;
-    };
-  }
-
   static _isSupportedBodyType(bodyType) {
     for (var key in conf.BODY_TYPES) {
       if (conf.BODY_TYPES[key] === bodyType) return true;
@@ -140,7 +120,8 @@ class StereotypeClient {
         request.put(conf.TEMPLATES_URL + idTemplate)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', contentType)
-          .use(StereotypeClient._mwCimpressHeaders(idTemplate))
+          .set('x-cimpress-read-permission', `stereotype-templates:${idTemplate}:read:templates`)
+          .set('x-cimpress-write-permission', `stereotype-templates:${idTemplate}:create:templates`)
           .send(bodyTemplate) // the body is empty anyway, no need for superfluous conditionals
           .then(
             (res) => {
@@ -179,12 +160,18 @@ class StereotypeClient {
         subsegment.addAnnotation('REST Action', 'POST');
         subsegment.addAnnotation('Template', idTemplate);
 
-        request
+        let req = request
           .post(conf.TEMPLATES_URL + idTemplate + conf.MATERIALIZATIONS)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
-          .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000)
-          .send(propertyBag)
+          .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000);
+
+        if (self.blacklistHeader)
+          req.set('x-cimpress-rel-blacklist', self.blacklistHeader);
+        if (self.whitelistHeader)
+          req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
+
+        req.send(propertyBag)
           .then(
             (res) => {
               subsegment.addAnnotation('Response Code', res.status);
