@@ -44,6 +44,14 @@ class StereotypeClient {
       let req = arguments[0];
       req.set('x-cimpress-read-permission', `stereotype-templates:${templateId}:read:templates`);
       req.set('x-cimpress-write-permission', `stereotype-templates:${templateId}:create:templates`);
+
+      if (this.blacklistHeader) {
+        req.set('x-cimpress-rel-blacklist', this.blacklistHeader);
+      }
+      if (this.whitelistHeader) {
+        req.set('x-cimpress-rel-whitelist', this.whitelistHeader);
+      }
+
       return req;
     };
   }
@@ -53,6 +61,14 @@ class StereotypeClient {
       if (conf.BODY_TYPES[key] === bodyType) return true;
     }
     return false;
+  }
+
+  setBlacklistHeader(headerValue) {
+    this.blacklistHeader = String(headerValue);
+  }
+
+  setWhitelistHeader(headerValue) {
+    this.whitelistHeader = String(headerValue);
   }
 
   /**
