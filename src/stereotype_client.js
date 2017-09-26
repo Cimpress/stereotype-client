@@ -231,6 +231,51 @@ class StereotypeClient {
   }
 
   /**
+   * Expands the given propertyBag, so the client can see how all the fields would look right before
+   * they are populated into the target template.
+   *
+   * @param {object} propertyBag A JSON object that contains the data to be populated in a template.
+   * @param {number} timeout Timeout value (ms) of how long the service should wait for a single link
+   *    to be resolved before timing out. Default is 5000ms
+   */
+  expand(propertyBag, timeout = 5000) {
+    let self = this;
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.expand', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.EXPAND_URL);
+        subsegment.addAnnotation('REST Action', 'POST');
+
+        let req = request
+          .post(conf.EXPAND_URL)
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .set('Content-Type', 'application/json')
+          .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000);
+
+        if (self.blacklistHeader)
+          req.set('x-cimpress-rel-blacklist', self.blacklistHeader);
+        if (self.whitelistHeader)
+          req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
+
+        req.send(propertyBag)
+          .then(
+            (res) => {
+              subsegment.addAnnotation('Response Code', res.status);
+              subsegment.close();
+              resolve(res.text);
+            },
+            (err) => {
+              subsegment.addAnnotation('Response Code', err.status);
+              subsegment.addAnnotation('Unable to expand propertyBag: ' + err.message);
+              subsegment.close(err);
+              reject(new Error('Unable to expand propertyBag: ' + err.message));
+            }
+          ); // Closes request chain
+
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
+  }
+
+  /**
    * Returns the status of the service as a boolean (alive/dead) (via a promise).
    *
    * @returns boolean
@@ -296,3 +341,68 @@ class StereotypeClient {
 }
 
 module.exports = StereotypeClient;
+
+
+const TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ik1qbENNemxCTnpneE1ETkJSVFpHTURFd09ETkRSalJGTlRSR04wTXpPRUpETnpORlFrUTROUSJ9.eyJpc3MiOiJodHRwczovL2NpbXByZXNzLmF1dGgwLmNvbS8iLCJzdWIiOiJhZGZzfGlub3Zha292QGNpbXByZXNzLmNvbSIsImF1ZCI6Imh0dHBzOi8vYXBpLmNpbXByZXNzLmlvLyIsImF6cCI6IlFreE92Tno0ZldSRlQ2dmNxNzl5bGNJdW9sRnoyY3dOIiwiZXhwIjoxNTA2NDQzOTQzLCJpYXQiOjE1MDY0MzY3NDMsImh0dHBzOi8vY2xhaW1zLmNpbXByZXNzLmlvL2NpbXByZXNzX2ludGVybmFsIjp0cnVlfQ.WEA-W1Xy2E-F-iVm_sbd-z7Mx3aW0w0z1PP20EiX4KPrx8WsNLOVqGej1hkWlmlA6GsHWT44zGYYmBQILnv9W6FCqqrRfGsjEphVoHYkgb5fjzS1fj4ntcYe_wWdyXhXUqFVOnaMGG2YDRLE1m2wvRoKYGb0GrzsakVCGk6X0iR7u_B0AaIF567CK6SENSzSsB89po1woyElD4Nl3e2yvxVPOxggKKSHQ47dkDyrnbSrcouPmF4_2E8Ojhces9NDJbDvtyYxKTzVYt9A0xIybDKsjBVvTyXhTRphASwKxZCRuywSSbMoOPEXEsi-it2j3ocGnVgG5ODRTQ2zfGGKbw';
+
+let sc = new StereotypeClient(TOKEN);
+
+let mail = `Content-Type: text/html
+To: {{recipient}}
+Subject: {{subject}}
+Message-ID: <cb6677b3-2fba-0b24-4337-9cf5efe546c3@localhost>
+Content-Transfer-Encoding: quoted-printable
+Date: Tue, 12 Sep 2017 11:24:48 +0000
+MIME-Version: 1.0
+
+<html>
+<head></head>
+<body>
+Simple email.
+</body>
+</html>
+`;
+
+// let xr = require('aws-xray-sdk-core');
+// for (let x in xr) {
+//   console.log(`${x}: ${xr[x]}`);
+// }
+
+// sc.livecheck().then((status) => console.log(status ? 'ALIVE' : 'DEAD'), (err) => console.log("ERROR\n", err));
+
+// sc.getSwagger().then((swag) => console.log('SWAGGER\n', swag.info.title), (err) => console.log('ERROR\n', err));
+
+// sc.putTemplate('ivo-bad', null, conf.BODY_TYPES.dust, 'cutom_perm_1', 'custom_perm_2').then((status) => console.log(status), (err) => console.log("ERROR\n", err));
+
+// sc.putTemplate('ivoMail2', mail, conf.BODY_TYPES.mustache).then((status) => console.log(status), (err) => console.log("ERROR\n", err));
+
+let pbag = {
+  "MD54CBHF04": {
+    "href": "https://tst-orderconsole.at.cimpress.io/v1/items/MD54CBHF04",
+    "rel": "self"
+  },
+  "M2992B550H": {
+    "href": "https://tst-orderconsole.at.cimpress.io/v1/items/M2992B550H",
+    "rel": "self"
+  }
+};
+
+sc.expand(pbag, 5000).then((materialization) => console.log('mat id:', materialization), (err) => console.log("ERROR\n", err));
+
+
+// sc.getTemplate('ivo').then((template) => console.log(`type: ${template.templateType}, content: ${template.templateBody}`), (err) => console.log('ERROR\n', err));
+
+// sc.materialize('ivo', {
+//   "name": "Zoidberg"
+// }, 5000, true).then((materialization) => console.log('mat id:', materialization), (err) => console.log("ERROR\n", err));
+
+// sc.materialize('ivoMail', {
+//   "recipient": "inovakov@cimpress.com",
+//   "subject": "Test PureMail email."
+// }).then((materialization) => console.log(materialization), (err) => console.log("ERROR\n", err));
+
+// sc.materialize('ivo', {
+//   "name": "Zoidberg"
+// }, 5000, true).then((materializationId) => console.log(materializationId), (err) => console.log("ERROR\n", err));
+
+// sc.getMaterialization('26c3e66e-7e5c-4aee-8d86-3c9b3707a1de').then((materialization) => console.log('Materialization\n', materialization), (err) => console.log('ERROR\n', err));

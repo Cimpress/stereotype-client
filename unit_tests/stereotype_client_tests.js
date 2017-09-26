@@ -14,8 +14,7 @@ describe('Stereotype client', function() {
   this.timeout(10000);
 
   let token = 'demo_Auth0_v2_token';
-  let fulfillerId = 1234;
-  let client = new StereotypeClient(token, fulfillerId);
+  let client = new StereotypeClient(token);
   let nockRequest;
   let templateName = 'testTemplate';
   var templBody = 'Hello {{name}}.';
@@ -68,8 +67,8 @@ describe('Stereotype client', function() {
         nockRequest = nock(conf.BASE_URL, {
           reqheaders: {
             'Authorization': 'Bearer demo_Auth0_v2_token',
-            'x-cimpress-read-permission': `fulfillers:${fulfillerId}:create`,
-            'x-cimpress-write-permission': `fulfillers:${fulfillerId}:create`
+            'x-cimpress-read-permission': `stereotype-templates:${templateName}:read:templates`,
+            'x-cimpress-write-permission': `stereotype-templates:${templateName}:create:templates`
           }
         });
       });
@@ -145,8 +144,18 @@ describe('Stereotype client', function() {
     });
   });
 
-  describe('Livecheck', function() {
+  describe('Expand', function() {
+    it('expands a propertyBag', function() {
+      let propertyBag = {};
+      let expanded = 'Hello Customer.';
+      nockRequest.post('/' + conf.VERSION + conf.EXPAND)
+        .reply(200, expanded);
 
+      return client.expand(propertyBag, 5000).then((expansion) => expect(expansion).to.equal(expanded));
+    });
+  });
+
+  describe('Livecheck', function() {
     it('is alive', function() {
       nockRequest.get('/livecheck').reply(200);
       return expect(client.livecheck()).to.eventually.equal(true);
