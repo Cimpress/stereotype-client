@@ -184,7 +184,6 @@ class StereotypeClient {
             },
             (err) => {
               subsegment.addAnnotation('Response Code', err.status);
-              subsegment.addAnnotation('Unable to materialize template: ' + err.message);
               subsegment.close(err);
               reject(new Error('Unable to materialize template: ' + err.message));
             }
