@@ -66,9 +66,7 @@ describe('Stereotype client', function() {
         // Here we need to also have headers with the right COAM permissions.
         nockRequest = nock(conf.BASE_URL, {
           reqheaders: {
-            'Authorization': 'Bearer demo_Auth0_v2_token',
-            'x-cimpress-read-permission': `stereotype-templates:${templateName}:read:templates`,
-            'x-cimpress-write-permission': `stereotype-templates:${templateName}:create:templates`
+            'Authorization': 'Bearer demo_Auth0_v2_token'
           }
         });
       });

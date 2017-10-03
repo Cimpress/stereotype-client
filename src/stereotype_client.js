@@ -120,8 +120,6 @@ class StereotypeClient {
         request.put(conf.TEMPLATES_URL + idTemplate)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', contentType)
-          .set('x-cimpress-read-permission', `stereotype-templates:${idTemplate}:read:templates`)
-          .set('x-cimpress-write-permission', `stereotype-templates:${idTemplate}:create:templates`)
           .send(bodyTemplate) // the body is empty anyway, no need for superfluous conditionals
           .then(
             (res) => {
