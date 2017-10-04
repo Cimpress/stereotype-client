@@ -80,7 +80,6 @@ class StereotypeClient {
             },
             (err) => {
               subsegment.addAnnotation('Response Code', err.status);
-              subsegment.addAnnotation('Error Message', 'Unable to get template: ' + err.message);
               subsegment.close(err);
               reject(new Error('Unable to get template: ' + err.message));
             }
@@ -109,7 +108,6 @@ class StereotypeClient {
         // Validate the body type, err via a Promise:
         if (!StereotypeClient._isSupportedBodyType(contentType)) {
           let err = new Error('Invalid content type: ' + contentType);
-          subsegment.addAnnotation('Error Message', 'Invalid content type: ' + contentType);
           subsegment.close(err);
           reject(err);
         }
@@ -129,7 +127,6 @@ class StereotypeClient {
             },
             (err) => {
               subsegment.addAnnotation('Response Code', err.status);
-              subsegment.addAnnotation('Error Message', 'Unable to create/update template: ' + err.message);
               subsegment.close(err);
               reject(new Error('Unable to create/update template: ' + err.message));
             }
@@ -217,7 +214,6 @@ class StereotypeClient {
             },
             (err) => {
               subsegment.addAnnotation('Response Code', err.status);
-              subsegment.addAnnotation('Error Message', 'Unable to get materialization: ' + err.message);
               subsegment.close(err);
               reject(new Error('Unable to get materialization: ' + err.message));
             }
@@ -295,7 +291,6 @@ class StereotypeClient {
             },
             (err) => {
               subsegment.addAnnotation('Response Code', err.status);
-              subsegment.addAnnotation('Error Message', 'Unable to get livecheck data: ' + err.message);
               subsegment.close(err);
               reject(new Error('Unable to get livecheck data: ' + err.message));
             }
@@ -326,7 +321,6 @@ class StereotypeClient {
             },
             (err) => {
               subsegment.addAnnotation('Response Code', err.status);
-              subsegment.addAnnotation('Error Message', ('Unable to get swagger: ' + err.message));
               subsegment.close(err);
               reject(new Error('Unable to get swagger: ' + err.message));
             }
