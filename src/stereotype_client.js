@@ -56,9 +56,14 @@ class StereotypeClient {
    * - templateType: text/dust, text/mustache, text/handlebars, etc.
    * - templateBody: the template itself
    *
+   * Sometimes when creating a template and accessing it a very short time later,
+   * it's possible to get a 404 'Template not found' because of caching along the way.
+   * In order to avoid that you can use the `skipCache` parameter here.
+   *
    * @param {string} idTemplate
+   * @param {boolean} skipCache
    */
-  getTemplate(idTemplate) {
+  getTemplate(idTemplate, skipCache = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.getTemplate', function(subsegment) {
@@ -67,7 +72,7 @@ class StereotypeClient {
         subsegment.addAnnotation('Template', idTemplate);
 
         request
-          .get(conf.TEMPLATES_URL + idTemplate)
+          .get(conf.TEMPLATES_URL + idTemplate + (skipCache ? `&skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
