@@ -1,3 +1,3 @@
-const StereotypeClient = require("./stereotype_client");
+const StereotypeClient = require('./stereotype_client');
 
 module.exports = StereotypeClient;

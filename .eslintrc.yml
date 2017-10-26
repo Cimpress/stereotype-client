@@ -1,0 +1,7 @@
+extends: google
+env:
+  es6: 1
+rules:
+  require-jsdoc: 0
+  valid-jsdoc: 0
+  max-len: [error, 120]

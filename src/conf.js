@@ -9,7 +9,7 @@ const EXPAND_URL = BASE_URL + VERSION + EXPAND;
 const BODY_TYPES = {
   dust: 'text/dust',
   mustache: 'text/mustache',
-  handlebars: 'text/handlebars'
+  handlebars: 'text/handlebars',
 };
 
 module.exports = {
@@ -20,5 +20,5 @@ module.exports = {
   MATERIALIZATIONS_URL,
   EXPAND,
   EXPAND_URL,
-  BODY_TYPES
+  BODY_TYPES,
 };

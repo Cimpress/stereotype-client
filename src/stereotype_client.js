@@ -5,7 +5,6 @@ const request = require('superagent');
 const conf = require('./conf');
 
 class StereotypeClient {
-
   /**
    * Instantiates a StereotypeClient, ready to work with templates.
    *
@@ -29,15 +28,15 @@ class StereotypeClient {
       captureAsyncFunc: function(annot, callback) {
         let subsegment = {
           addAnnotation: function(annot, annotParam) {},
-          close: function(err = null) {}
+          close: function(err = null) {},
         };
         callback(subsegment);
-      }
+      },
     };
   }
 
   static _isSupportedBodyType(bodyType) {
-    for (var key in conf.BODY_TYPES) {
+    for (let key in conf.BODY_TYPES) {
       if (conf.BODY_TYPES[key] === bodyType) return true;
     }
     return false;
@@ -89,7 +88,6 @@ class StereotypeClient {
               reject(new Error('Unable to get template: ' + err.message));
             }
           );
-
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }
@@ -136,7 +134,6 @@ class StereotypeClient {
               reject(new Error('Unable to create/update template: ' + err.message));
             }
           );
-
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }
@@ -166,10 +163,12 @@ class StereotypeClient {
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000);
 
-        if (self.blacklistHeader)
+        if (self.blacklistHeader) {
           req.set('x-cimpress-rel-blacklist', self.blacklistHeader);
-        if (self.whitelistHeader)
+        }
+        if (self.whitelistHeader) {
           req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
+        }
 
         req.send(propertyBag)
           .then(
@@ -190,7 +189,6 @@ class StereotypeClient {
               reject(new Error('Unable to materialize template: ' + err.message));
             }
           ); // Closes request chain
-
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }
@@ -223,7 +221,6 @@ class StereotypeClient {
               reject(new Error('Unable to get materialization: ' + err.message));
             }
           );
-
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }
@@ -249,10 +246,12 @@ class StereotypeClient {
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000);
 
-        if (self.blacklistHeader)
+        if (self.blacklistHeader) {
           req.set('x-cimpress-rel-blacklist', self.blacklistHeader);
-        if (self.whitelistHeader)
+        }
+        if (self.whitelistHeader) {
           req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
+        }
 
         req.send(propertyBag)
           .then(
@@ -268,7 +267,6 @@ class StereotypeClient {
               reject(new Error('Unable to expand propertyBag: ' + err.message));
             }
           ); // Closes request chain
-
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }
@@ -300,7 +298,6 @@ class StereotypeClient {
               reject(new Error('Unable to get livecheck data: ' + err.message));
             }
           );
-
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }
@@ -330,7 +327,6 @@ class StereotypeClient {
               reject(new Error('Unable to get swagger: ' + err.message));
             }
           );
-
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }

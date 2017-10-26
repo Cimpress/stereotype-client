@@ -10,33 +10,28 @@ const StereotypeClient = require('../src/stereotype_client');
 const conf = require('../src/conf');
 
 describe('Stereotype client', function() {
-
-  this.timeout(10000);
-
   let token = 'demo_Auth0_v2_token';
   let client = new StereotypeClient(token);
   let nockRequest;
   let templateName = 'testTemplate';
-  var templBody = 'Hello {{name}}.';
-  var contentType = 'text/mustache';
+  let templBody = 'Hello {{name}}.';
+  let contentType = 'text/mustache';
 
   beforeEach(function() {
     // All we need is the right URL and a valid auth token.
     nockRequest = nock(conf.BASE_URL, {
       reqheaders: {
-        'Authorization': 'Bearer demo_Auth0_v2_token'
-      }
+        'Authorization': 'Bearer demo_Auth0_v2_token',
+      },
     });
   });
 
   describe('Template', function() {
-
     describe('Read', function() {
-
       it('reads a template', function() {
         nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
           .reply(200, templBody, {
-            'content-type': contentType
+            'content-type': contentType,
           });
 
         return client.getTemplate(templateName).then((tpl) => {
@@ -61,13 +56,12 @@ describe('Stereotype client', function() {
     });
 
     describe('Write', function() {
-
       beforeEach(function() {
         // Here we need to also have headers with the right COAM permissions.
         nockRequest = nock(conf.BASE_URL, {
           reqheaders: {
-            'Authorization': 'Bearer demo_Auth0_v2_token'
-          }
+            'Authorization': 'Bearer demo_Auth0_v2_token',
+          },
         });
       });
 
@@ -89,7 +83,8 @@ describe('Stereotype client', function() {
         nockRequest.patch(`/${conf.VERSION}/templates/${templateName}`)
           .reply(200);
 
-        return expect(client.putTemplate(templateName, null, null, 'custom-r-perm', 'custom-w-perm')).to.eventually.succeed;
+        return expect(client.putTemplate(templateName, null, null, 'custom-r-perm', 'custom-w-perm'))
+          .to.eventually.succeed;
       });
 
       it('fails to create a template with bad permissions', function() {
@@ -105,7 +100,7 @@ describe('Stereotype client', function() {
         let materializedBody = 'Hello Customer.';
         nockRequest.post(`/${conf.VERSION}/templates/${templateName}${conf.MATERIALIZATIONS}`)
           .reply(200, materializedBody, {
-            'content-type': contentType
+            'content-type': contentType,
           });
 
         return client.materialize(templateName).then((tpl) => expect(tpl).to.equal(materializedBody));
@@ -116,7 +111,7 @@ describe('Stereotype client', function() {
         let propertyBag = {};
         nockRequest.post(`/${conf.VERSION}/templates/${templateName}${conf.MATERIALIZATIONS}`)
           .reply(200, matId, {
-            'location': `/v1/materializations/${matId}`
+            'location': `/v1/materializations/${matId}`,
           });
 
         return client.materialize(templateName, propertyBag, 5000, true).then((tpl) => expect(tpl).to.equal(matId));
@@ -127,7 +122,7 @@ describe('Stereotype client', function() {
         let materializationId = 'test_mat_id';
         nockRequest.get(`/${conf.VERSION}/materializations/${materializationId}`)
           .reply(200, materializedBody, {
-            'content-type': contentType
+            'content-type': contentType,
           });
 
         return client.getMaterialization(materializationId).then((tpl) => expect(tpl).to.equal(materializedBody));
@@ -169,8 +164,8 @@ describe('Stereotype client', function() {
     it('has correct title', function() {
       nockRequest.get(`/${conf.VERSION}/swagger.json`).reply(200, {
         info: {
-          title: 'Stereotype'
-        }
+          title: 'Stereotype',
+        },
       });
 
       return client.getSwagger().then((swagger) => expect(swagger.info.title).to.equal('Stereotype'));
@@ -181,5 +176,4 @@ describe('Stereotype client', function() {
       return expect(client.getSwagger()).to.be.rejected;
     });
   });
-
 });
