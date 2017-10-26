@@ -4,4 +4,4 @@ env:
 rules:
   require-jsdoc: 0
   valid-jsdoc: 0
-  max-len: [error, 120]
+  max-len: [error, 150]
