@@ -51,6 +51,40 @@ class StereotypeClient {
   }
 
   /**
+   * Returns a list of JSON objects with the following fields:
+   * - templateId: string
+   * - canCopy: boolean
+   * - edit: boolean
+   *
+   * @param {boolean} skipCache
+   */
+  listTemplates(skipCache = false) {
+    let self = this;
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.listTemplates', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.TEMPLATES_URL);
+        subsegment.addAnnotation('REST Action', 'GET');
+
+        request
+          .get(conf.TEMPLATES_URL + (skipCache ? `&skip_cache=${Date.now()}` : ''))
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .then(
+            (res) => {
+              subsegment.addAnnotation('ResponseCode', res.status);
+              subsegment.close();
+              resolve(res.body);
+            },
+            (err) => {
+              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.close(err);
+              reject(new Error('Unable to get the list of templates: ' + err.message));
+            }
+          );
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
+  }
+
+  /**
    * Returns a promise with a JSON object with two fields:
    * - templateType: text/dust, text/mustache, text/handlebars, etc.
    * - templateBody: the template itself
