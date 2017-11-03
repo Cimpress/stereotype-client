@@ -32,11 +32,11 @@ describe('Stereotype client', function() {
         let templList = [{
           templateId: 'templ1',
           canCopy: true,
-          edit: true,
+          canEdit: true,
         }, {
           templateId: 'templ2',
           canCopy: true,
-          edit: true,
+          canEdit: true,
         }];
 
         nockRequest.get(`/${conf.VERSION}/templates/`)

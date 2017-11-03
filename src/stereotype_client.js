@@ -54,7 +54,7 @@ class StereotypeClient {
    * Returns a list of JSON objects with the following fields:
    * - templateId: string
    * - canCopy: boolean
-   * - edit: boolean
+   * - canEdit: boolean
    *
    * @param {boolean} skipCache
    */
