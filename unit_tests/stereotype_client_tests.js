@@ -27,6 +27,29 @@ describe('Stereotype client', function() {
   });
 
   describe('Template', function() {
+    describe('List', function() {
+      it('lists all templates', function() {
+        let templList = [{
+          templateId: 'templ1',
+          canCopy: true,
+          canEdit: true,
+        }, {
+          templateId: 'templ2',
+          canCopy: true,
+          canEdit: true,
+        }];
+
+        nockRequest.get(`/${conf.VERSION}/templates/`)
+          .reply(200, templList, {
+            'content-type': 'application/json',
+          });
+
+        return client.listTemplates().then((list) => {
+          expect(JSON.stringify(list)).to.equal(JSON.stringify(templList));
+        });
+      });
+    });
+
     describe('Read', function() {
       it('reads a template', function() {
         nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
