@@ -8,7 +8,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/Cimpress-MCP/stereotype-client.git"
+		"url": "git+https://github.com/Cimpress/stereotype-client.git"
 	},
 	"keywords": [
 		"cimpress",
@@ -18,9 +18,9 @@
 	"author": "Ivaylo Novakov <inovakov@gmail.com>",
 	"license": "Apache-2.0",
 	"bugs": {
-		"url": "https://github.com/Cimpress-MCP/stereotype-client/issues"
+		"url": "https://github.com/Cimpress/stereotype-client/issues"
 	},
-	"homepage": "https://github.com/Cimpress-MCP/stereotype-client#readme",
+	"homepage": "https://github.com/Cimpress/stereotype-client#readme",
 	"dependencies": {
 		"superagent": "^3.8.1"
 	},
