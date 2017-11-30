@@ -18,6 +18,7 @@ class StereotypeClient {
     this.accessToken = this.accessToken.substring(this.accessToken.indexOf(' ') + 1);
 
     this.xray = xray || StereotypeClient._getDummyXray();
+    this.curies = {};
   }
 
   /**
@@ -52,6 +53,24 @@ class StereotypeClient {
 
   setCurieHeader(headerValue) {
     this.curieHeader = String(headerValue);
+  }
+
+  /**
+   * Specifies a curie for a given link relation.
+   * If the curie header is set explicitly with setCurieHeader,
+   * that value will overwrite curies set with this method.
+   */
+  setCurie(rel, replacement) {
+    this.curies[rel] = replacement;
+  }
+
+  /**
+   * Construct a curie header from the key-value pairs set with setCurie().
+   */
+  _constructCurieHeader() {
+    return Object.keys(this.curies)
+      .map(k => k + conf.CURIE_SEPARATOR + this.curies[k])
+      .join(",");
   }
 
   /**
@@ -209,6 +228,8 @@ class StereotypeClient {
         }
         if (self.curieHeader) {
           req.set('x-cimpress-rel-curies', self.curieHeader);
+        } else if (Object.keys(self.curies).length) {
+          req.set('x-cimpress-rel-curies', self._constructCurieHeader());
         }
 
         req.send(propertyBag)
@@ -295,6 +316,8 @@ class StereotypeClient {
         }
         if (self.curieHeader) {
           req.set('x-cimpress-rel-curies', self.curieHeader);
+        } else if (Object.keys(self.curies).length) {
+          req.set('x-cimpress-rel-curies', self._constructCurieHeader());
         }
 
         req.send(propertyBag)
