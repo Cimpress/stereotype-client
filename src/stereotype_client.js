@@ -50,6 +50,10 @@ class StereotypeClient {
     this.whitelistHeader = String(headerValue);
   }
 
+  setCurieHeader(headerValue) {
+    this.curieHeader = String(headerValue);
+  }
+
   /**
    * Returns a list of JSON objects with the following fields:
    * - templateId: string
@@ -203,6 +207,9 @@ class StereotypeClient {
         if (self.whitelistHeader) {
           req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
         }
+        if (self.curieHeader) {
+          req.set('x-cimpress-rel-curies', self.curieHeader);
+        }
 
         req.send(propertyBag)
           .then(
@@ -285,6 +292,9 @@ class StereotypeClient {
         }
         if (self.whitelistHeader) {
           req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
+        }
+        if (self.curieHeader) {
+          req.set('x-cimpress-rel-curies', self.curieHeader);
         }
 
         req.send(propertyBag)
