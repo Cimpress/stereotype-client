@@ -12,6 +12,8 @@ const BODY_TYPES = {
   handlebars: 'text/handlebars',
 };
 
+const CURIE_SEPARATOR = ';';
+
 module.exports = {
   BASE_URL,
   VERSION,
@@ -21,4 +23,5 @@ module.exports = {
   EXPAND,
   EXPAND_URL,
   BODY_TYPES,
+  CURIE_SEPARATOR
 };
