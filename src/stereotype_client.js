@@ -69,8 +69,8 @@ class StereotypeClient {
    */
   _constructCurieHeader() {
     return Object.keys(this.curies)
-      .map(k => k + conf.CURIE_SEPARATOR + this.curies[k])
-      .join(",");
+      .map((k) => k + conf.CURIE_SEPARATOR + this.curies[k])
+      .join(',');
   }
 
   /**
@@ -205,8 +205,10 @@ class StereotypeClient {
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
+   * @param {boolean} preferAsync Informs Stereotype service that the client would prefer not to wait for
+   *    the immediate materialization of the template but will instead fetch the materializition at a later time.
    */
-  materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
+  materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false, preferAsync = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.materialize', function(subsegment) {
@@ -231,6 +233,9 @@ class StereotypeClient {
         } else if (Object.keys(self.curies).length) {
           req.set('x-cimpress-rel-curies', self._constructCurieHeader());
         }
+        if (preferAsync) {
+          req.set('prefer', 'respond-async');
+        }
 
         req.send(propertyBag)
           .then(
@@ -241,6 +246,8 @@ class StereotypeClient {
                 // the `+ 1` is for the leading `/`:
                 let preStringLen = conf.VERSION.length + conf.MATERIALIZATIONS.length + 1;
                 resolve(res.headers.location.substring(preStringLen));
+              } else if (preferAsync && res.headers['Preference-Applied'] === 'respond-async') {
+                resolve(res.headers.location);
               } else {
                 resolve(res.text);
               }
