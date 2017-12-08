@@ -246,18 +246,18 @@ class StereotypeClient {
                 // the `+ 1` is for the leading `/`:
                 let preStringLen = conf.VERSION.length + conf.MATERIALIZATIONS.length + 1;
                 resolve(res.headers.location.substring(preStringLen));
-              } else if (preferAsync && res.headers['Preference-Applied'] === 'respond-async') {
+              } else if (preferAsync && res.headers['access-control-expose-headers'].include('Preference-Applied')) {
                 resolve(res.headers.location);
               } else {
                 resolve(res.text);
               }
-            },
+            })
+          .catch(
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.close(err);
               reject(new Error('Unable to materialize template: ' + err.message));
-            }
-          ); // Closes request chain
+            }); // Closes request chain
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }
