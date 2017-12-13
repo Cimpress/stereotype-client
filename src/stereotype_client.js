@@ -242,7 +242,7 @@ class StereotypeClient {
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
               subsegment.close();
-              if (getMaterializationId) {
+              if (getMaterializationId && res.headers && res.headers.location) {
                 // the `+ 1` is for the leading `/`:
                 let preStringLen = conf.VERSION.length + conf.MATERIALIZATIONS.length + 1;
                 resolve(res.headers.location.substring(preStringLen));
