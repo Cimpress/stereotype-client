@@ -51,6 +51,10 @@ class StereotypeClient {
     this.whitelistHeader = String(headerValue);
   }
 
+  setAcceptPreferenceHeader(headerValue) {
+    this.acceptPreferenceHeader = String(headerValue);
+  }
+
   setCurieHeader(headerValue) {
     this.curieHeader = String(headerValue);
   }
@@ -228,6 +232,9 @@ class StereotypeClient {
         if (self.whitelistHeader) {
           req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
         }
+        if (self.acceptPreferenceHeader) {
+          req.set('x-cimpress-accept-preference', self.acceptPreferenceHeader);
+        }
         if (self.curieHeader) {
           req.set('x-cimpress-rel-curies', self.curieHeader);
         } else if (Object.keys(self.curies).length) {
@@ -320,6 +327,9 @@ class StereotypeClient {
         }
         if (self.whitelistHeader) {
           req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
+        }
+        if (self.acceptPreferenceHeader) {
+          req.set('x-cimpress-accept-preference', self.acceptPreferenceHeader);
         }
         if (self.curieHeader) {
           req.set('x-cimpress-rel-curies', self.curieHeader);
