@@ -246,8 +246,7 @@ class StereotypeClient {
                 // the `+ 1` is for the leading `/`:
                 let preStringLen = conf.VERSION.length + conf.MATERIALIZATIONS.length + 1;
                 resolve(res.headers.location.substring(preStringLen));
-              } else if (preferAsync && res.headers && res.headers['access-control-expose-headers'] &&
-                res.headers['access-control-expose-headers'].include('Preference-Applied')) {
+              } else if (res.status == 202) { // async
                 resolve(res.headers.location);
               } else {
                 resolve(res.text);
