@@ -209,10 +209,49 @@ class StereotypeClient {
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
-   * @param {boolean} preferAsync Informs Stereotype service that the client would prefer not to wait for
-   *    the immediate materialization of the template but will instead fetch the materializition at a later time.
    */
-  materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false, preferAsync = false) {
+  materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
+    return this.materializeSync(idTemplate, propertyBag, timeout, getMaterializationId)
+      .then((resultStruct) => resultStruct.result);
+  }
+
+  /**
+   * Returns a promise that resolves to an object with two fields - `status` and `result`.
+   * The `result` field holds the materialization, while the `status` field is expected to always be `201`.
+   * The main purpose of the `status` field is uniformity with the `materializeAsync` method.
+   *
+   * @param {string} idTemplate
+   * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
+   * @param {number} timeout Timeout value (ms) of how long the service should wait for a single link
+   *    to be resolved before timing out. Default is 5000ms
+   * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
+   *    body. We can use that id later to fetch the materialized template without resending the properties.
+   *    Defaults to false.
+   */
+  materializeSync(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
+    return this._materialize(idTemplate, propertyBag, timeout, getMaterializationId);
+  }
+
+  /**
+   * Returns a promise that resolves to an object with two fields - `status` and `result`.
+   * The `result` field holds either the location where the materialization will be available
+   * or the materialization itself. The `status` field is expected to always be either `202`
+   * in case the preference for async execution was respected or `201` in case the server
+   * decided to ignore the preference and execute the request synchronously.
+   *
+   * @param {string} idTemplate
+   * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
+   * @param {number} timeout Timeout value (ms) of how long the service should wait for a single link
+   *    to be resolved before timing out. Default is 5000ms
+   * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
+   *    body. We can use that id later to fetch the materialized template without resending the properties.
+   *    Defaults to false.
+   */
+  materializeAsync(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
+    return this._materialize(idTemplate, propertyBag, timeout, getMaterializationId, true);
+  }
+
+  _materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false, preferAsync = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.materialize', function(subsegment) {
@@ -252,11 +291,20 @@ class StereotypeClient {
               if (getMaterializationId && res.headers && res.headers.location) {
                 // the `+ 1` is for the leading `/`:
                 let preStringLen = conf.VERSION.length + conf.MATERIALIZATIONS.length + 1;
-                resolve(res.headers.location.substring(preStringLen));
+                resolve({
+                  status: res.status,
+                  result: res.headers.location.substring(preStringLen),
+                });
               } else if (res.status == 202) { // async
-                resolve(res.headers.location);
-              } else {
-                resolve(res.text);
+                resolve({
+                  status: res.status,
+                  result: res.headers.location,
+                });
+              } else { // sync
+                resolve({
+                  status: res.status,
+                  result: res.text,
+                });
               }
             })
           .catch(
