@@ -93,7 +93,7 @@ class StereotypeClient {
         subsegment.addAnnotation('REST Action', 'GET');
 
         request
-          .get(conf.TEMPLATES_URL + (skipCache ? `&skip_cache=${Date.now()}` : ''))
+          .get(conf.TEMPLATES_URL + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -132,7 +132,7 @@ class StereotypeClient {
         subsegment.addAnnotation('Template', idTemplate);
 
         request
-          .get(conf.TEMPLATES_URL + idTemplate + (skipCache ? `&skip_cache=${Date.now()}` : ''))
+          .get(conf.TEMPLATES_URL + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
