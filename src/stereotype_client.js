@@ -146,7 +146,7 @@ class StereotypeClient {
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.close(err);
-              reject(new Error('Unable to get template: ' + err.message));
+              reject(new Error('Unable to get template: ' + err.message + '\nStatus: ' + err.status));
             }
           );
       }); // Closes self.xray.captureAsyncFunc()
