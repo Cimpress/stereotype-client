@@ -118,6 +118,38 @@ describe('Stereotype client', function() {
       });
     });
 
+    describe('Delete', function() {
+      beforeEach(function() {
+        // Here we need to also have headers with the right COAM permissions.
+        nockRequest = nock(conf.BASE_URL, {
+          reqheaders: {
+            'Authorization': 'Bearer demo_Auth0_v2_token',
+          },
+        });
+      });
+
+      it('deletes a template', function() {
+        nockRequest.delete(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(200);
+
+        return expect(client.deleteTemplate(templateName)).to.eventually.succeed;
+      });
+
+      it('fails to delete a non-existant template', function() {
+        nockRequest.delete(`/${conf.VERSION}/templates/NON-EXISTENT-TEMPLATE`)
+          .reply(404);
+
+        return expect(client.deleteTemplate(templateName)).to.eventually.be.rejected;
+      });
+
+      it('fails to delete a template with bad permissions', function() {
+        nockRequest.delete(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(403);
+
+        return expect(client.deleteTemplate(templateName)).to.eventually.be.rejected;
+      });
+    });
+
     describe('Materialize', function() {
       it('materializes a template', function() {
         let materializedBody = 'Hello Customer.';

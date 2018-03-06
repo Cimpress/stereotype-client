@@ -200,6 +200,37 @@ class StereotypeClient {
   }
 
   /**
+   * Deletes a template.
+   *
+   * @param {string} idTemplate The name of the template we want to delete.
+   */
+  deleteTemplate(idTemplate) {
+    let self = this;
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.deleteTemplate', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.TEMPLATES_URL);
+        subsegment.addAnnotation('RESTAction', 'DELETE');
+        subsegment.addAnnotation('Template', idTemplate);
+
+        request.delete(conf.TEMPLATES_URL + idTemplate)
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .then(
+            (res) => {
+              subsegment.addAnnotation('ResponseCode', res.status);
+              subsegment.close();
+              resolve(res.status);
+            },
+            (err) => {
+              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.close(err);
+              reject(new Error('Unable to delete template: ' + err.message));
+            }
+          );
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
+  }
+
+  /**
    * Creates a template materialization by populating a template with data.
    *
    * @param {string} idTemplate
