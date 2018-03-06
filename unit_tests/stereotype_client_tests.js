@@ -92,22 +92,14 @@ describe('Stereotype client', function() {
         nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
           .reply(201);
 
-        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.succeed;
+        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.fulfilled;
       });
 
       it('updates an existing template - body', function() {
         nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
           .reply(200);
 
-        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.succeed;
-      });
-
-      it('updates an existing template - permissions only (hit the PATCH endpoint)', function() {
-        nockRequest.patch(`/${conf.VERSION}/templates/${templateName}`)
-          .reply(200);
-
-        return expect(client.putTemplate(templateName, null, null, 'custom-r-perm', 'custom-w-perm'))
-          .to.eventually.succeed;
+        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.fulfilled;
       });
 
       it('fails to create a template with bad permissions', function() {
@@ -132,7 +124,7 @@ describe('Stereotype client', function() {
         nockRequest.delete(`/${conf.VERSION}/templates/${templateName}`)
           .reply(200);
 
-        return expect(client.deleteTemplate(templateName)).to.eventually.succeed;
+        return expect(client.deleteTemplate(templateName)).to.eventually.be.fulfilled;
       });
 
       it('fails to delete a non-existant template', function() {
