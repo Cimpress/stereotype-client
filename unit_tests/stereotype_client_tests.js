@@ -92,22 +92,14 @@ describe('Stereotype client', function() {
         nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
           .reply(201);
 
-        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.succeed;
+        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.fulfilled;
       });
 
       it('updates an existing template - body', function() {
         nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
           .reply(200);
 
-        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.succeed;
-      });
-
-      it('updates an existing template - permissions only (hit the PATCH endpoint)', function() {
-        nockRequest.patch(`/${conf.VERSION}/templates/${templateName}`)
-          .reply(200);
-
-        return expect(client.putTemplate(templateName, null, null, 'custom-r-perm', 'custom-w-perm'))
-          .to.eventually.succeed;
+        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.fulfilled;
       });
 
       it('fails to create a template with bad permissions', function() {
@@ -115,6 +107,38 @@ describe('Stereotype client', function() {
           .reply(403);
 
         return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.rejected;
+      });
+    });
+
+    describe('Delete', function() {
+      beforeEach(function() {
+        // Here we need to also have headers with the right COAM permissions.
+        nockRequest = nock(conf.BASE_URL, {
+          reqheaders: {
+            'Authorization': 'Bearer demo_Auth0_v2_token',
+          },
+        });
+      });
+
+      it('deletes a template', function() {
+        nockRequest.delete(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(200);
+
+        return expect(client.deleteTemplate(templateName)).to.eventually.be.fulfilled;
+      });
+
+      it('fails to delete a non-existant template', function() {
+        nockRequest.delete(`/${conf.VERSION}/templates/NON-EXISTENT-TEMPLATE`)
+          .reply(404);
+
+        return expect(client.deleteTemplate(templateName)).to.eventually.be.rejected;
+      });
+
+      it('fails to delete a template with bad permissions', function() {
+        nockRequest.delete(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(403);
+
+        return expect(client.deleteTemplate(templateName)).to.eventually.be.rejected;
       });
     });
 

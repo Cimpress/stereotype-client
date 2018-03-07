@@ -22,17 +22,17 @@
 	},
 	"homepage": "https://github.com/Cimpress/stereotype-client#readme",
 	"dependencies": {
-		"superagent": "^3.8.1"
+		"superagent": "^3.8.2"
 	},
 	"devDependencies": {
 		"chai-as-promised": "^7.1.1",
-		"grunt": "^1.0.1",
+		"grunt": "^1.0.2",
 		"grunt-contrib-jshint": "^1.1.0",
 		"grunt-contrib-watch": "^1.0.0",
 		"grunt-mocha-istanbul": "^5.0.2",
 		"istanbul": "^0.4.5",
-		"mocha": "^4.0.1",
+		"mocha": "^5.0.2",
 		"mocha-istanbul": "^0.3.0",
-		"nock": "^9.1.0"
+		"nock": "^9.2.3"
 	}
 }
