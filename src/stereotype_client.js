@@ -4,6 +4,9 @@ const request = require('superagent');
 
 const conf = require('./conf');
 
+const DEFAULT_NUM_RETRIES = 3;
+const DEFAULT_TIMEOUT = 5000;
+
 class StereotypeClient {
   /**
    * Instantiates a StereotypeClient, ready to work with templates.
@@ -241,7 +244,7 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
+  materialize(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false) {
     return this.materializeSync(idTemplate, propertyBag, timeout, getMaterializationId)
       .then((resultStruct) => resultStruct.result);
   }
@@ -259,7 +262,7 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeSync(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
+  materializeSync(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false) {
     return this._materialize(idTemplate, propertyBag, timeout, getMaterializationId);
   }
 
@@ -278,11 +281,11 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeAsync(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false) {
+  materializeAsync(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false) {
     return this._materialize(idTemplate, propertyBag, timeout, getMaterializationId, true);
   }
 
-  _materialize(idTemplate, propertyBag, timeout = 5000, getMaterializationId = false, preferAsync = false) {
+  _materialize(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false, preferAsync = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.materialize', function(subsegment) {
@@ -294,7 +297,7 @@ class StereotypeClient {
           .post(conf.TEMPLATES_URL + idTemplate + conf.MATERIALIZATIONS)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
-          .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000);
+          .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : DEFAULT_TIMEOUT);
 
         if (self.blacklistHeader) {
           req.set('x-cimpress-rel-blacklist', self.blacklistHeader);
@@ -389,7 +392,7 @@ class StereotypeClient {
    *    to be resolved before timing out. Default is 5000ms
    * @param {number} numberOfRetries Number of times to try again if the expansion times out
    */
-  expand(propertyBag, timeout = 5000, numberOfRetries = 3) {
+  expand(propertyBag, timeout = DEFAULT_TIMEOUT, numberOfRetries = DEFAULT_NUM_RETRIES) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.expand', function(subsegment) {
@@ -400,7 +403,7 @@ class StereotypeClient {
           .post(conf.EXPAND_URL)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
-          .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : 5000);
+          .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : DEFAULT_TIMEOUT);
 
         if (self.blacklistHeader) {
           req.set('x-cimpress-rel-blacklist', self.blacklistHeader);
