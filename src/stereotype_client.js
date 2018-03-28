@@ -387,8 +387,9 @@ class StereotypeClient {
    * @param {object} propertyBag A JSON object that contains the data to be populated in a template.
    * @param {number} timeout Timeout value (ms) of how long the service should wait for a single link
    *    to be resolved before timing out. Default is 5000ms
+   * @param {number} numberOfRetries Number of times to try again if the expansion times out
    */
-  expand(propertyBag, timeout = 5000) {
+  expand(propertyBag, timeout = 5000, numberOfRetries = 3) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.expand', function(subsegment) {
@@ -424,10 +425,20 @@ class StereotypeClient {
               resolve(res.text);
             },
             (err) => {
+              let isTimeoutError = (err) => err.response.body.findIndex((e) => e.expandedMessage.includes('ESOCKETTIMEDOUT')) !== -1;
+
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.addAnnotation('UnableToExpandPropertyBag: ' + err.message);
-              subsegment.close(err);
-              reject(new Error('Unable to expand propertyBag: ' + err.message));
+
+              if (err.status === 400 && numberOfRetries > 0 && isTimeoutError(err)) {
+                subsegment.addAnnotation('WillRetry: true');
+                subsegment.close(err);
+                resolve(expand(propertyBag, timeout, numberOfRetries - 1));
+              } else {
+                subsegment.addAnnotation('WillRetry: false');
+                subsegment.close(err);
+                reject(new Error('Unable to expand propertyBag: ' + err.message));
+              }
             }
           ); // Closes request chain
       }); // Closes self.xray.captureAsyncFunc()
