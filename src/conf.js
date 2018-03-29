@@ -23,5 +23,5 @@ module.exports = {
   EXPAND,
   EXPAND_URL,
   BODY_TYPES,
-  CURIE_SEPARATOR
+  CURIE_SEPARATOR,
 };
