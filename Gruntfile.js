@@ -1,49 +1,51 @@
 'use strict';
 
 module.exports = function(grunt) {
-
   grunt.initConfig({
-    mocha_istanbul: {
+    'mocha_istanbul': {
       coverage: {
         src: ['unit_tests', 'src'],
         options: {
-          mask: '**/*.js'
-        }
-      }
+          mask: '**/*.js',
+        },
+      },
     },
-    istanbul_check_coverage: {
+    'istanbul_check_coverage': {
       default: {
         options: {
           coverageFolder: 'coverage*',
           check: {
             lines: 70,
-            statements: 70
-          }
-        }
-      }
-    },
-    jshint: {
-      files: ['Gruntfile.js', 'src/**/*.js', 'unit_test/**/*.js'],
-      options: {
-        globals: {
-          jQuery: true
+            statements: 70,
+          },
         },
-        ignores: ['src/node_modules/**'],
-        esversion: 6,
-        node: true
-      }
+      },
     },
-    watch: {
-      files: ['<%= jshint.files %>'],
-      tasks: ['jshint']
-    }
+    'eslint': {
+      options: {
+        configFile: '.eslintrc.yml',
+      },
+      target: ['Gruntfile.js', 'src/**/*.js', 'tests/**/*.js'],
+    },
+    'babel': {
+      options: {
+        sourceMap: true,
+      },
+      dist: {
+        files: [{
+          expand: true,
+          cwd: 'src/',
+          src: ['*.js'],
+          dest: 'dist/',
+        }],
+      },
+    },
   });
 
   grunt.loadNpmTasks('grunt-mocha-istanbul');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-eslint');
+  grunt.loadNpmTasks('grunt-babel');
 
-  grunt.registerTask('default', ['jshint']);
-  grunt.registerTask('test', ['jshint', 'mocha_istanbul:coverage', 'istanbul_check_coverage']);
-
+  grunt.registerTask('default', ['eslint']);
+  grunt.registerTask('test', ['default', 'mocha_istanbul:coverage', 'istanbul_check_coverage']);
 };
