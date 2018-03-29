@@ -107,7 +107,7 @@ class StereotypeClient {
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.close(err);
-              reject(new Error('Unable to get the list of templates: ' + err.message));
+              reject(err);
             }
           );
       }); // Closes self.xray.captureAsyncFunc()
@@ -195,7 +195,7 @@ class StereotypeClient {
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.close(err);
-              reject(new Error('Unable to create/update template: ' + err.message));
+              reject(err);
             }
           );
       }); // Closes self.xray.captureAsyncFunc()
@@ -226,7 +226,7 @@ class StereotypeClient {
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.close(err);
-              reject(new Error('Unable to delete template: ' + err.message));
+              reject(err);
             }
           );
       }); // Closes self.xray.captureAsyncFunc()
@@ -345,7 +345,7 @@ class StereotypeClient {
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.close(err);
-              reject(new Error('Unable to materialize template: ' + err.message));
+              reject(err);
             }); // Closes request chain
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
@@ -376,7 +376,7 @@ class StereotypeClient {
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.close(err);
-              reject(new Error('Unable to get materialization: ' + err.message));
+              reject(err);
             }
           );
       }); // Closes self.xray.captureAsyncFunc()
@@ -440,7 +440,7 @@ class StereotypeClient {
               } else {
                 subsegment.addAnnotation('WillRetry: false');
                 subsegment.close(err);
-                reject(new Error('Unable to expand propertyBag: ' + err.message));
+                reject(err);
               }
             }
           ); // Closes request chain
@@ -472,7 +472,7 @@ class StereotypeClient {
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.close(err);
-              reject(new Error('Unable to get livecheck data: ' + err.message));
+              reject(err);
             }
           );
       }); // Closes self.xray.captureAsyncFunc()
@@ -501,7 +501,7 @@ class StereotypeClient {
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.close(err);
-              reject(new Error('Unable to get swagger: ' + err.message));
+              reject(err);
             }
           );
       }); // Closes self.xray.captureAsyncFunc()
