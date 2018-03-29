@@ -32,11 +32,12 @@ module.exports = function(grunt) {
         sourceMap: true,
       },
       dist: {
-        files: {
-          'dist/conf.js': 'src/conf.js',
-          'dist/index.js': 'src/index.js',
-          'dist/stereotype_client.js': 'src/stereotype_client.js',
-        },
+        files: [{
+          expand: true,
+          cwd: 'src/',
+          src: ['*.js'],
+          dest: 'dist/',
+        }],
       },
     },
   });
