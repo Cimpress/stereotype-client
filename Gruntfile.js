@@ -46,6 +46,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-eslint');
   grunt.loadNpmTasks('grunt-babel');
 
-  grunt.registerTask('default', ['eslint', 'babel']);
-  grunt.registerTask('test', ['default', 'mocha_istanbul:coverage', 'istanbul_check_coverage']);
+  grunt.registerTask('default', ['eslint']);
+  grunt.registerTask('test', ['default', 'mocha_istanbul:coverage', 'istanbul_check_coverage', 'babel']);
 };
