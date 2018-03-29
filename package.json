@@ -2,10 +2,11 @@
 	"name": "stereotype-client",
 	"version": "1.2.13",
 	"description": "A simple client for Cimpress' Stereotype service.",
-	"main": "dist/index.js",
+	"main": "./dist/index.js",
 	"scripts": {
+		"test": "grunt test",
 		"build": "babel src -d dist",
-		"test": "grunt test"
+		"prepublish": "npm run build"
 	},
 	"repository": {
 		"type": "git",
