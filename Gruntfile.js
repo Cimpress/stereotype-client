@@ -33,7 +33,9 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
+          'dist/conf.js': 'src/conf.js',
           'dist/index.js': 'src/index.js',
+          'dist/stereotype_client.js': 'src/stereotype_client.js',
         },
       },
     },
