@@ -127,6 +127,12 @@ class StereotypeClient {
    * @param {boolean} skipCache
    */
   getTemplate(idTemplate, skipCache = false) {
+    if (!idTemplate) {
+      return Promise.reject({
+        status: 404,
+        message: `Template not found! Empty template ID provided.`,
+      });
+    }
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.getTemplate', function(subsegment) {
