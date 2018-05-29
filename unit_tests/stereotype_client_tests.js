@@ -70,7 +70,7 @@ describe('Stereotype client', function() {
         return expect(client.getTemplate(templateName)).to.eventually.be.rejected;
       });
 
-      it.only('fails to read a template with an empty name', function() {
+      it('fails to read a template with an empty name', function() {
         return expect(client.getTemplate('')).to.eventually.be.rejected;
       });
 
