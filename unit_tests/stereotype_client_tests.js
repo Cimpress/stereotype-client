@@ -70,6 +70,10 @@ describe('Stereotype client', function() {
         return expect(client.getTemplate(templateName)).to.eventually.be.rejected;
       });
 
+      it.only('fails to read a template with an empty name', function() {
+        return expect(client.getTemplate('')).to.eventually.be.rejected;
+      });
+
       it('fails to read a template due to bad permissions', function() {
         nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
           .reply(403);
