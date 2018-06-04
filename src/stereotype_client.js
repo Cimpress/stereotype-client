@@ -150,6 +150,7 @@ class StereotypeClient {
               resolve({
                 templateType: res.type,
                 templateBody: res.text,
+                isPublic: !!res.headers['x-cimpress-template-public'],
               });
             },
             (err) => {
@@ -170,7 +171,7 @@ class StereotypeClient {
    * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
    *    when bodyTemplate is passed.
    */
-  putTemplate(idTemplate, bodyTemplate = null, contentType = null) {
+  putTemplate(idTemplate, bodyTemplate = null, contentType = null, isPublic = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.putTemplate', function(subsegment) {
@@ -191,6 +192,7 @@ class StereotypeClient {
         request.put(conf.TEMPLATES_URL + idTemplate)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', contentType)
+          .set('x-cimpress-template-public', !!isPublic)
           .send(bodyTemplate) // the body is empty anyway, no need for superfluous conditionals
           .then(
             (res) => {
