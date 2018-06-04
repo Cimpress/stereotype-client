@@ -171,7 +171,7 @@ class StereotypeClient {
    * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
    *    when bodyTemplate is passed.
    */
-  putTemplate(idTemplate, bodyTemplate = null, contentType = null, isPublic = false) {
+  putTemplate(idTemplate, bodyTemplate = null, contentType = null, isPublic = false, skipCache = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.putTemplate', function(subsegment) {
@@ -189,7 +189,7 @@ class StereotypeClient {
         // Replace `null` or `undefined` with an empty string body.
         bodyTemplate = bodyTemplate || '';
 
-        request.put(conf.TEMPLATES_URL + idTemplate)
+        request.put(conf.TEMPLATES_URL + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', contentType)
           .set('x-cimpress-template-public', !!isPublic)
@@ -215,7 +215,7 @@ class StereotypeClient {
    *
    * @param {string} idTemplate The name of the template we want to delete.
    */
-  deleteTemplate(idTemplate) {
+  deleteTemplate(idTemplate, skipCache = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.deleteTemplate', function(subsegment) {
@@ -223,7 +223,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'DELETE');
         subsegment.addAnnotation('Template', idTemplate);
 
-        request.delete(conf.TEMPLATES_URL + idTemplate)
+        request.delete(conf.TEMPLATES_URL + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -252,8 +252,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materialize(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false) {
-    return this.materializeSync(idTemplate, propertyBag, timeout, getMaterializationId)
+  materialize(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false, skipCache = false) {
+    return this.materializeSync(idTemplate, propertyBag, timeout, getMaterializationId, skipCache)
       .then((resultStruct) => resultStruct.result);
   }
 
@@ -270,8 +270,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeSync(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false) {
-    return this._materialize(idTemplate, propertyBag, timeout, getMaterializationId);
+  materializeSync(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false, skipCache = false) {
+    return this._materialize(idTemplate, propertyBag, timeout, getMaterializationId, false, skipCache);
   }
 
   /**
@@ -289,11 +289,11 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeAsync(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false) {
-    return this._materialize(idTemplate, propertyBag, timeout, getMaterializationId, true);
+  materializeAsync(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false, skipCache = false) {
+    return this._materialize(idTemplate, propertyBag, timeout, getMaterializationId, true, skipCache);
   }
 
-  _materialize(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false, preferAsync = false) {
+  _materialize(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false, preferAsync = false, skipCache = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.materialize', function(subsegment) {
@@ -302,7 +302,7 @@ class StereotypeClient {
         subsegment.addAnnotation('Template', idTemplate);
 
         let req = request
-          .post(conf.TEMPLATES_URL + idTemplate + conf.MATERIALIZATIONS)
+          .post(conf.TEMPLATES_URL + idTemplate + conf.MATERIALIZATIONS + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : DEFAULT_TIMEOUT);
@@ -364,7 +364,7 @@ class StereotypeClient {
    *
    * @param {string} idMaterialization The id of the materialization, as returned by `materialize`.
    */
-  getMaterialization(idMaterialization) {
+  getMaterialization(idMaterialization, skipCache = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.getMaterialization', function(subsegment) {
@@ -373,7 +373,7 @@ class StereotypeClient {
         subsegment.addAnnotation('TemplateMaterialization', idMaterialization);
 
         request
-          .get(conf.MATERIALIZATIONS_URL + idMaterialization)
+          .get(conf.MATERIALIZATIONS_URL + idMaterialization + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -400,7 +400,7 @@ class StereotypeClient {
    *    to be resolved before timing out. Default is 5000ms
    * @param {number} numberOfRetries Number of times to try again if the expansion times out
    */
-  expand(propertyBag, timeout = DEFAULT_TIMEOUT, numberOfRetries = DEFAULT_NUM_RETRIES) {
+  expand(propertyBag, timeout = DEFAULT_TIMEOUT, numberOfRetries = DEFAULT_NUM_RETRIES, skipCache = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.expand', function(subsegment) {
@@ -408,7 +408,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'POST');
 
         let req = request
-          .post(conf.EXPAND_URL)
+          .post(conf.EXPAND_URL + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : DEFAULT_TIMEOUT);
@@ -461,7 +461,7 @@ class StereotypeClient {
    *
    * @returns boolean
    */
-  livecheck() {
+  livecheck(skipCache = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.livecheck', function(subsegment) {
@@ -469,7 +469,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'GET');
 
         request
-          .get(conf.BASE_URL + 'livecheck')
+          .get(conf.BASE_URL + 'livecheck' + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -490,7 +490,7 @@ class StereotypeClient {
   /**
    * Returns the swagger file of the service (via a promise).
    */
-  getSwagger() {
+  getSwagger(skipCache = false) {
     let self = this;
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.getSwagger', function(subsegment) {
@@ -498,7 +498,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'GET');
 
         request
-          .get(conf.BASE_URL + conf.VERSION + '/swagger.json')
+          .get(conf.BASE_URL + conf.VERSION + '/swagger.json' + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
