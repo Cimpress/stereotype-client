@@ -4,8 +4,8 @@ node_js:
 install:
 - npm install
 script:
-- npm test
-- npm build
+- npm run test
+- npm run build
 deploy:
   provider: npm
   email: TrdelnikSquad@cimpress.com
