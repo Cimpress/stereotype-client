@@ -150,7 +150,7 @@ class StereotypeClient {
               resolve({
                 templateType: res.type,
                 templateBody: res.text,
-                isPublic: !!res.headers['x-cimpress-template-public'],
+                isPublic: (res.headers['x-cimpress-template-public']||'').toLowerCase() === 'true',
               });
             },
             (err) => {
@@ -170,9 +170,13 @@ class StereotypeClient {
    * @param {string} bodyTemplate The body of the template.
    * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
    *    when bodyTemplate is passed.
+   * @param {bool} isPublic Shows whether to set the tempalte as public or not. Optional, defaults to false.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   putTemplate(idTemplate, bodyTemplate = null, contentType = null, isPublic = false, skipCache = false) {
     let self = this;
+    let isPublicFlag = isPublic && (isPublic.toString().toLowerCase() === 'true');
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.putTemplate', function(subsegment) {
         subsegment.addAnnotation('URL', conf.TEMPLATES_URL);
@@ -189,10 +193,11 @@ class StereotypeClient {
         // Replace `null` or `undefined` with an empty string body.
         bodyTemplate = bodyTemplate || '';
 
+
         request.put(conf.TEMPLATES_URL + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', contentType)
-          .set('x-cimpress-template-public', !!isPublic)
+          .set('x-cimpress-template-public', isPublicFlag.toString())
           .send(bodyTemplate) // the body is empty anyway, no need for superfluous conditionals
           .then(
             (res) => {

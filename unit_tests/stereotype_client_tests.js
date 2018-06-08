@@ -9,7 +9,7 @@ chai.use(chaiAsPromised);
 const StereotypeClient = require('../src/stereotype_client');
 const conf = require('../src/conf');
 
-describe('Stereotype client', function() {
+describe('Stereotype client', function () {
   let token = 'demo_Auth0_v2_token';
   let client = new StereotypeClient(token);
   let nockRequest;
@@ -17,7 +17,7 @@ describe('Stereotype client', function() {
   let templBody = 'Hello {{name}}.';
   let contentType = 'text/mustache';
 
-  beforeEach(function() {
+  beforeEach(function () {
     // All we need is the right URL and a valid auth token.
     nockRequest = nock(conf.BASE_URL, {
       reqheaders: {
@@ -26,9 +26,9 @@ describe('Stereotype client', function() {
     });
   });
 
-  describe('Template', function() {
-    describe('List', function() {
-      it('lists all templates', function() {
+  describe('Template', function () {
+    describe('List', function () {
+      it('lists all templates', function () {
         let templList = [{
           templateId: 'templ1',
           canCopy: true,
@@ -50,31 +50,47 @@ describe('Stereotype client', function() {
       });
     });
 
-    describe('Read', function() {
-      it('reads a template', function() {
+    describe('Read', function () {
+      it('reads a public template', function () {
         nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
           .reply(200, templBody, {
             'content-type': contentType,
+            'x-cimpress-template-public': 'tRue'
           });
 
         return client.getTemplate(templateName).then((tpl) => {
           expect(tpl.templateBody).to.equal(templBody);
           expect(tpl.templateType).to.equal(contentType);
+          expect(tpl.isPublic).to.be.true;
         });
       });
 
-      it('fails to read a nonexistent template', function() {
+      it('reads a private template', function () {
+        nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
+          .reply(200, templBody, {
+            'content-type': contentType,
+            'x-cimpress-template-public': 'false'
+          });
+
+        return client.getTemplate(templateName).then((tpl) => {
+          expect(tpl.templateBody).to.equal(templBody);
+          expect(tpl.templateType).to.equal(contentType);
+          expect(tpl.isPublic).to.be.false;
+        });
+      });
+
+      it('fails to read a nonexistent template', function () {
         nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
           .reply(404);
 
         return expect(client.getTemplate(templateName)).to.eventually.be.rejected;
       });
 
-      it('fails to read a template with an empty name', function() {
+      it('fails to read a template with an empty name', function () {
         return expect(client.getTemplate('')).to.eventually.be.rejected;
       });
 
-      it('fails to read a template due to bad permissions', function() {
+      it('fails to read a template due to bad permissions', function () {
         nockRequest.get(`/${conf.VERSION}/templates/${templateName}`)
           .reply(403);
 
@@ -82,8 +98,8 @@ describe('Stereotype client', function() {
       });
     });
 
-    describe('Write', function() {
-      beforeEach(function() {
+    describe('Write', function () {
+      beforeEach(function () {
         // Here we need to also have headers with the right COAM permissions.
         nockRequest = nock(conf.BASE_URL, {
           reqheaders: {
@@ -92,21 +108,35 @@ describe('Stereotype client', function() {
         });
       });
 
-      it('creates a new valid template', function() {
-        nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
-          .reply(201);
+      [true, 'true', 'True'].forEach(isPublic => {
+        it(`creates a new valid public ${isPublic} template`, function () {
+          nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
+            .matchHeader('x-cimpress-template-public', 'true')
+            .reply(201);
 
-        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.fulfilled;
+          return expect(client.putTemplate(templateName, templBody, contentType, isPublic)).to.eventually.be.fulfilled;
+        });
       });
 
-      it('updates an existing template - body', function() {
+      [undefined, 'false', false, 'False'].forEach(isPublic => {
+        it(`creates a new valid private (${isPublic}) template`, function () {
+          nockRequest
+            .matchHeader('x-cimpress-template-public', 'false')
+            .put(`/${conf.VERSION}/templates/${templateName}`)
+            .reply(201);
+
+          return expect(client.putTemplate(templateName, templBody, contentType, isPublic)).to.eventually.be.fulfilled;
+        });
+      });
+
+      it('updates an existing template - body', function () {
         nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
           .reply(200);
 
         return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.fulfilled;
       });
 
-      it('fails to create a template with bad permissions', function() {
+      it('fails to create a template with bad permissions', function () {
         nockRequest.put(`/${conf.VERSION}/templates/${templateName}`)
           .reply(403);
 
@@ -114,8 +144,8 @@ describe('Stereotype client', function() {
       });
     });
 
-    describe('Delete', function() {
-      beforeEach(function() {
+    describe('Delete', function () {
+      beforeEach(function () {
         // Here we need to also have headers with the right COAM permissions.
         nockRequest = nock(conf.BASE_URL, {
           reqheaders: {
@@ -124,21 +154,21 @@ describe('Stereotype client', function() {
         });
       });
 
-      it('deletes a template', function() {
+      it('deletes a template', function () {
         nockRequest.delete(`/${conf.VERSION}/templates/${templateName}`)
           .reply(200);
 
         return expect(client.deleteTemplate(templateName)).to.eventually.be.fulfilled;
       });
 
-      it('fails to delete a non-existant template', function() {
+      it('fails to delete a non-existant template', function () {
         nockRequest.delete(`/${conf.VERSION}/templates/NON-EXISTENT-TEMPLATE`)
           .reply(404);
 
         return expect(client.deleteTemplate(templateName)).to.eventually.be.rejected;
       });
 
-      it('fails to delete a template with bad permissions', function() {
+      it('fails to delete a template with bad permissions', function () {
         nockRequest.delete(`/${conf.VERSION}/templates/${templateName}`)
           .reply(403);
 
@@ -146,8 +176,8 @@ describe('Stereotype client', function() {
       });
     });
 
-    describe('Materialize', function() {
-      it('materializes a template', function() {
+    describe('Materialize', function () {
+      it('materializes a template', function () {
         let materializedBody = 'Hello Customer.';
         nockRequest.post(`/${conf.VERSION}/templates/${templateName}${conf.MATERIALIZATIONS}`)
           .reply(200, materializedBody, {
@@ -157,7 +187,7 @@ describe('Stereotype client', function() {
         return client.materialize(templateName).then((tpl) => expect(tpl).to.equal(materializedBody));
       });
 
-      it('materializes a template to a materialization id', function() {
+      it('materializes a template to a materialization id', function () {
         let matId = 'a162538a-bcf2-4b43-9d53-12cb0dd04b7b';
         let propertyBag = {};
         nockRequest.post(`/${conf.VERSION}/templates/${templateName}${conf.MATERIALIZATIONS}`)
@@ -168,7 +198,7 @@ describe('Stereotype client', function() {
         return client.materialize(templateName, propertyBag, 5000, true).then((tpl) => expect(tpl).to.equal(matId));
       });
 
-      it('fetches a template that was previously materialized', function() {
+      it('fetches a template that was previously materialized', function () {
         let materializedBody = 'Hello Customer.';
         let materializationId = 'test_mat_id';
         nockRequest.get(`/${conf.VERSION}/materializations/${materializationId}`)
@@ -179,7 +209,7 @@ describe('Stereotype client', function() {
         return client.getMaterialization(materializationId).then((tpl) => expect(tpl).to.equal(materializedBody));
       });
 
-      it('fails to materialize a template with bad permissions', function() {
+      it('fails to materialize a template with bad permissions', function () {
         nockRequest.post(`/${conf.VERSION}/templates/${templateName}${conf.MATERIALIZATIONS}`)
           .reply(403);
 
@@ -188,8 +218,8 @@ describe('Stereotype client', function() {
     });
   });
 
-  describe('Expand', function() {
-    it('expands a propertyBag', function() {
+  describe('Expand', function () {
+    it('expands a propertyBag', function () {
       let propertyBag = {};
       let expanded = 'Hello Customer.';
       nockRequest.post('/' + conf.VERSION + conf.EXPAND)
@@ -199,20 +229,20 @@ describe('Stereotype client', function() {
     });
   });
 
-  describe('Livecheck', function() {
-    it('is alive', function() {
+  describe('Livecheck', function () {
+    it('is alive', function () {
       nockRequest.get('/livecheck').reply(200);
       return expect(client.livecheck()).to.eventually.equal(true);
     });
 
-    it('handles 500', function() {
+    it('handles 500', function () {
       nockRequest.get('/livecheck').reply(500);
       return expect(client.livecheck()).to.be.rejected;
     });
   });
 
-  describe('Get Swagger', function() {
-    it('has correct title', function() {
+  describe('Get Swagger', function () {
+    it('has correct title', function () {
       nockRequest.get(`/${conf.VERSION}/swagger.json`).reply(200, {
         info: {
           title: 'Stereotype',
@@ -222,7 +252,7 @@ describe('Stereotype client', function() {
       return client.getSwagger().then((swagger) => expect(swagger.info.title).to.equal('Stereotype'));
     });
 
-    it('handles 500', function() {
+    it('handles 500', function () {
       nockRequest.get(`/${conf.VERSION}/swagger.json`).reply(500);
       return expect(client.getSwagger()).to.be.rejected;
     });
