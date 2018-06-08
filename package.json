@@ -5,8 +5,7 @@
 	"main": "./dist/index.js",
 	"scripts": {
 		"test": "grunt test",
-		"build": "babel src -d dist",
-		"prepublish": "npm run build"
+		"build": "babel src -d dist"
 	},
 	"repository": {
 		"type": "git",
@@ -32,7 +31,6 @@
 		"chai-as-promised": "^7.1.1",
 		"eslint-config-google": "^0.9.1",
 		"grunt": "^1.0.2",
-		"grunt-babel": "^7.0.0",
 		"grunt-eslint": "^20.1.0",
 		"grunt-mocha-istanbul": "^5.0.2",
 		"istanbul": "^0.4.5",
