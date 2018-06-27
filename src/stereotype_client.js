@@ -441,7 +441,7 @@ class StereotypeClient {
               resolve(res.text);
             },
             (err) => {
-              let isTimeoutError = (err) => err.response.body.findIndex((e) => e.expandedMessage.includes('ESOCKETTIMEDOUT')) !== -1;
+              let isTimeoutError = (err) => err.response.text.includes('ESOCKETTIMEDOUT');
 
               subsegment.addAnnotation('ResponseCode', err.status);
               subsegment.addAnnotation('UnableToExpandPropertyBag: ' + err.message);
