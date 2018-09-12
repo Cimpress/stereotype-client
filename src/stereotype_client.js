@@ -308,9 +308,9 @@ class StereotypeClient {
         req.send({
           template: {
             body: Base64.encode(template.content),
-            contentType: template.contentType
+            contentType: template.contentType,
           },
-          templatePayload: propertyBag
+          templatePayload: propertyBag,
         })
           .then(
             (res) => {
