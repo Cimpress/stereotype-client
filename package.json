@@ -26,6 +26,7 @@
   ],
   "homepage": "https://github.com/Cimpress/stereotype-client#readme",
   "dependencies": {
+    "js-base64": "^2.4.9",
     "superagent": "^3.8.3"
   },
   "devDependencies": {
