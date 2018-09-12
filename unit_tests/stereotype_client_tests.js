@@ -198,6 +198,23 @@ describe('Stereotype client', function () {
         return client.materialize(templateName, propertyBag, 5000, true).then((tpl) => expect(tpl).to.equal(matId));
       });
 
+      it('materializes a template based on content', function () {
+        let materializedTemplate = 'data data data';
+        nockRequest.post(`/${conf.VERSION}${conf.MATERIALIZATIONS}`)
+          .reply(200, materializedTemplate);
+
+        let propertyBag = {key:'value'};
+        let template = {
+          contentType: 'text/handlebars',
+          content: materializedTemplate
+        };
+
+        return client.materializeDirect(template, propertyBag, 5000, false).then((tpl) => expect(tpl).to.deep.equal({
+          result: materializedTemplate,
+          status: 200
+        }));
+      });
+
       it('fetches a template that was previously materialized', function () {
         let materializedBody = 'Hello Customer.';
         let materializationId = 'test_mat_id';

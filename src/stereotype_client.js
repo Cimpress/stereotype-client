@@ -1,6 +1,7 @@
 'use-strict';
 
 const request = require('superagent');
+const Base64 = require('js-base64').Base64;
 
 const conf = require('./conf');
 
@@ -260,6 +261,74 @@ class StereotypeClient {
   materialize(idTemplate, propertyBag, timeout = DEFAULT_TIMEOUT, getMaterializationId = false, skipCache = false) {
     return this.materializeSync(idTemplate, propertyBag, timeout, getMaterializationId, skipCache)
       .then((resultStruct) => resultStruct.result);
+  }
+
+  /**
+   *
+   * @param {object} template An object that contains template content and type. { contentType: x, content: y }
+   *    contentType can be one of 'text/mustache', 'text/dust' or 'text/handlebars'
+   * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
+   * @param {number} timeout Timeout value (ms) of how long the service should wait for a single link
+   *    to be resolved before timing out. Default is 5000ms
+   * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
+   *    body. We can use that id later to fetch the materialized template without resending the properties.
+   *    Defaults to false.
+   */
+  materializeDirect(template, propertyBag, timeout = DEFAULT_TIMEOUT, skipCache = false, preferAsync = false) {
+    let self = this;
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.materialize', function(subsegment) {
+        subsegment.addAnnotation('URL', conf.MATERIALIZATIONS_URL);
+        subsegment.addAnnotation('RESTAction', 'POST');
+
+        let req = request
+          .post(conf.MATERIALIZATIONS_URL + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .set('Content-Type', 'application/json')
+          .set('x-cimpress-link-timeout', Number(timeout) > 0 ? Number(timeout) : DEFAULT_TIMEOUT);
+
+        if (self.blacklistHeader) {
+          req.set('x-cimpress-rel-blacklist', self.blacklistHeader);
+        }
+        if (self.whitelistHeader) {
+          req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
+        }
+        if (self.acceptPreferenceHeader) {
+          req.set('x-cimpress-accept-preference', self.acceptPreferenceHeader);
+        }
+        if (self.curieHeader) {
+          req.set('x-cimpress-rel-curies', self.curieHeader);
+        } else if (Object.keys(self.curies).length) {
+          req.set('x-cimpress-rel-curies', self._constructCurieHeader());
+        }
+        if (preferAsync) {
+          req.set('prefer', 'respond-async');
+        }
+
+        req.send({
+          template: {
+            body: Base64.encode(template.content),
+            contentType: template.contentType,
+          },
+          templatePayload: propertyBag,
+        })
+          .then(
+            (res) => {
+              subsegment.addAnnotation('ResponseCode', res.status);
+              subsegment.close();
+              resolve({
+                status: res.status,
+                result: res.text,
+              });
+            })
+          .catch(
+            (err) => {
+              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.close(err);
+              reject(err);
+            }); // Closes request chain
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
   }
 
   /**
