@@ -42,7 +42,9 @@ class StereotypeClient {
 
   static _isSupportedBodyType(bodyType) {
     for (let key in conf.BODY_TYPES) {
-      if (conf.BODY_TYPES[key] === bodyType) return true;
+      if (conf.BODY_TYPES[key].includes(bodyType)) {
+        return true;
+      }
     }
     return false;
   }
