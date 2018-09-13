@@ -9,7 +9,7 @@ const EXPAND_URL = BASE_URL + VERSION + EXPAND;
 const BODY_TYPES = {
   dust: ['text/dust'],
   mustache: ['text/mustache'],
-  handlebars: ['text/handlebars','text/x-handlebars-template']
+  handlebars: ['text/handlebars', 'text/x-handlebars-template'],
 };
 
 const CURIE_SEPARATOR = ';';
