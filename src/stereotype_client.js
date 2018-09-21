@@ -193,6 +193,7 @@ class StereotypeClient {
               subsegment.close();
               resolve({
                 templateType: res.type,
+                contentType: res.headers['content-type'],
                 templateBody: res.text,
                 isPublic: (res.headers['x-cimpress-template-public'] || '').toLowerCase() === 'true',
               });

@@ -17,7 +17,8 @@ describe('Stereotype client', function () {
   let nockRequest;
   let templateName = 'testTemplate';
   let templBody = 'Hello {{name}}.';
-  let contentType = 'text/mustache';
+  let templateType = 'text/x-handlebars-template';
+  let contentType = 'text/x-handlebars-template; charset=utf-8; postProcessor=mjml';
 
   beforeEach(function () {
     // All we need is the right URL and a valid auth token.
@@ -62,7 +63,8 @@ describe('Stereotype client', function () {
 
         return client.getTemplate(templateName).then((tpl) => {
           expect(tpl.templateBody).to.equal(templBody);
-          expect(tpl.templateType).to.equal(contentType);
+          expect(tpl.templateType).to.equal(templateType);
+          expect(tpl.contentType).to.equal(contentType);
           expect(tpl.isPublic).to.be.true;
         });
       });
@@ -76,7 +78,7 @@ describe('Stereotype client', function () {
 
         return client.getTemplate(templateName).then((tpl) => {
           expect(tpl.templateBody).to.equal(templBody);
-          expect(tpl.templateType).to.equal(contentType);
+          expect(tpl.templateType).to.equal(templateType);
           expect(tpl.isPublic).to.be.false;
         });
       });
