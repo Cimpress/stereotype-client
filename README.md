@@ -30,7 +30,7 @@ sc.materialize('Greeting', {
 // Materialize a template and fetch its materialization id:
 let matId = sc.materialize('Greeting', {
   "name": "Zoidberg"
-}, 5000, true).then(
+}, true).then(
   (matId) => console.log(matId),
   (err) => console.log("ERROR:\n", err));
 
