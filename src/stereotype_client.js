@@ -140,7 +140,7 @@ class StereotypeClient {
         subsegment.addAnnotation('URL', templatesUrl);
         subsegment.addAnnotation('REST Action', 'GET');
 
-        let paramsObj = { 'public' : includePublic };
+        let paramsObj = {'public': includePublic};
         if (skipCache) {
           paramsObj.skip_cache = Date.now();
         }
