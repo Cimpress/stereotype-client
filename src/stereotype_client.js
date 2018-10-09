@@ -3,6 +3,7 @@
 const request = require('superagent');
 const Base64 = require('js-base64').Base64;
 const contentTypeParser = require('content-type');
+const qs = require('qs');
 
 const defaultConf = {
   baseUrl: 'https://stereotype.trdlnk.cimpress.io',
@@ -129,8 +130,9 @@ class StereotypeClient {
    * - canEdit: boolean
    *
    * @param {boolean} skipCache
+   * @param {boolean} includePublic
    */
-  listTemplates(skipCache = false) {
+  listTemplates(skipCache = false, includePublic = false) {
     let self = this;
     let templatesUrl = this._getUrl('/v1/templates');
     return new Promise((resolve, reject) => {
@@ -138,8 +140,13 @@ class StereotypeClient {
         subsegment.addAnnotation('URL', templatesUrl);
         subsegment.addAnnotation('REST Action', 'GET');
 
+        let paramsObj = {'public': includePublic};
+        if (skipCache) {
+          paramsObj.skip_cache = Date.now();
+        }
+        let params = qs.stringify(paramsObj);
         request
-          .get(templatesUrl + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .get(templatesUrl + `?${params}`)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {

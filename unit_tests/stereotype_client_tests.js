@@ -42,7 +42,7 @@ describe('Stereotype client', function () {
           canEdit: true,
         }];
 
-        nockRequest.get(`/v1/templates`)
+        nockRequest.get(`/v1/templates?public=false`)
           .reply(200, templList, {
             'content-type': 'application/json',
           });
