@@ -268,6 +268,55 @@ class StereotypeClient {
     }); // Closes new Promise()
   }
 
+
+  /**
+   * Create a template. When bodyTemplate is null only the permissions are updated.
+   *
+   * @param {string} bodyTemplate The body of the template.
+   * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
+   *    when bodyTemplate is passed.
+   * @param {bool} isPublic Shows whether to set the tempalte as public or not. Optional, defaults to false.
+   */
+  createTemplate(bodyTemplate = null, contentType = null, isPublic = false) {
+    let self = this;
+    let isPublicFlag = isPublic && (isPublic.toString().toLowerCase() === 'true');
+    const templatesUrl = this._getUrl('/v1/templates');
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.postTemplate', function(subsegment) {
+        subsegment.addAnnotation('URL', templatesUrl);
+        subsegment.addAnnotation('RESTAction', 'POST');
+
+        // Validate the body type, err via a Promise:
+        if (!StereotypeClient._isSupportedContentType(contentType)) {
+          let err = new Error('Invalid content type: ' + contentType);
+          subsegment.close(err);
+          reject(err);
+        }
+
+        request.post(templatesUrl)
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .set('Content-Type', contentType)
+          .set('x-cimpress-template-public', isPublicFlag.toString())
+          .send(bodyTemplate || '')
+          .then(
+            (res) => {
+              subsegment.addAnnotation('ResponseCode', res.status);
+              subsegment.addAnnotation('TemplateLocation', res.headers.location);
+              subsegment.close();
+              resolve({
+               status: res.status,
+               templateId: res.headers.location.replace('/v1/templates/', ''),
+              });
+            }
+          ).catch((err) => {
+            subsegment.addAnnotation('ResponseCode', err.status);
+            subsegment.close(err);
+            reject(err);
+          });
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
+  }
+
   /**
    * Deletes a template.
    *

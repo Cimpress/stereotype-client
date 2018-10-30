@@ -8,6 +8,15 @@ This project contains a client library for Cimpress' Stereotype service.
 ```javascript
 let sc = new StereotypeClient(AUTH0_V2_TOKEN);
 
+// Create a template:
+sc.createTemplate('Hello {{name}}!', 'text/mustache')
+  .then(
+    (response) => {
+      console.log(response.status);
+      console.log(response.templateId);
+    },
+    (err) => console.log("ERROR:\n", err));
+
 // Create or update a template:
 sc.putTemplate('Greeting', 'Hello {{name}}!', 'text/mustache')
   .then(
