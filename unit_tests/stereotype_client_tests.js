@@ -191,11 +191,19 @@ describe('Stereotype client', function () {
         });
       });
 
-      it('fails to create a template with bad permissions', function () {
-        nockRequest.put(`/v1/templates/${templateName}`)
+      it('fails to create a template with bad permissions PUT', function () {
+        let noPermissionsTemplateId = "no-permissions"
+        nockRequest.put(`/v1/templates/${noPermissionsTemplateId}`)
           .reply(403);
 
-        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.rejected;
+        return expect(client.putTemplate(noPermissionsTemplateId, templBody, contentType)).to.eventually.be.rejected;
+      });
+
+      it('fails to create a template with bad permissions POST', function () {
+        nockRequest.post(`/v1/templates`)
+          .reply(403);
+
+        return expect(client.createTemplate(templBody, contentType)).to.eventually.be.rejected;
       });
     });
 

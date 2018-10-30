@@ -227,47 +227,44 @@ class StereotypeClient {
    *    Optional, defaults to false.
    */
   putTemplate(idTemplate, bodyTemplate = null, contentType = null, isPublic = false, skipCache = false) {
-    let self = this;
-    let isPublicFlag = isPublic && (isPublic.toString().toLowerCase() === 'true');
     let templatesUrl = this._getUrl('/v1/templates');
     return new Promise((resolve, reject) => {
-      self.xray.captureAsyncFunc('Stereotype.putTemplate', function(subsegment) {
+      this.xray.captureAsyncFunc('Stereotype.putTemplate', (subsegment) => {
         subsegment.addAnnotation('URL', templatesUrl);
         subsegment.addAnnotation('RESTAction', 'PUT');
         subsegment.addAnnotation('Template', idTemplate);
 
-        // Validate the body type, err via a Promise:
-        if (!StereotypeClient._isSupportedContentType(contentType)) {
-          let err = new Error('Invalid content type: ' + contentType);
-          subsegment.close(err);
-          reject(err);
-        }
-
-        // Replace `null` or `undefined` with an empty string body.
-        bodyTemplate = bodyTemplate || '';
-
-
-        request.put(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
-          .set('Authorization', 'Bearer ' + self.accessToken)
-          .set('Content-Type', contentType)
-          .set('x-cimpress-template-public', isPublicFlag.toString())
-          .send(bodyTemplate) // the body is empty anyway, no need for superfluous conditionals
-          .then(
-            (res) => {
-              subsegment.addAnnotation('ResponseCode', res.status);
-              subsegment.close();
-              resolve(res.status);
-            },
-            (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
-              subsegment.close(err);
-              reject(err);
-            }
-          );
+        this._createTemplate(`${templatesUrl}/${idTemplate}`, 'PUT', bodyTemplate, contentType, isPublic)
+          .then((res) => {
+            subsegment.addAnnotation('ResponseCode', res.status);
+            subsegment.close();
+            resolve(res.status);
+          })
+          .catch((err) => {
+            subsegment.addAnnotation('ResponseCode', err.status);
+            subsegment.close(err);
+            reject(err);
+          });
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }
 
+  _createTemplate(templateURL, method, bodyTemplate = null, contentType = null, isPublic = false) {
+    const isPublicFlag = isPublic && (isPublic.toString().toLowerCase() === 'true');
+
+    if (!['POST', 'PUT'].includes(method)) {
+      return Promise.reject(new Error('You should pass POST or PUT for the method parameter'));
+    }
+
+    if (!StereotypeClient._isSupportedContentType(contentType)) {
+      return Promise.reject(new Error('Invalid content type: ' + contentType));
+    }
+    return request(method, templateURL)
+      .set('Authorization', 'Bearer ' + this.accessToken)
+      .set('Content-Type', contentType)
+      .set('x-cimpress-template-public', isPublicFlag.toString())
+      .send(bodyTemplate || '');
+  }
 
   /**
    * Create a template. When bodyTemplate is null only the permissions are updated.
@@ -278,41 +275,27 @@ class StereotypeClient {
    * @param {bool} isPublic Shows whether to set the tempalte as public or not. Optional, defaults to false.
    */
   createTemplate(bodyTemplate = null, contentType = null, isPublic = false) {
-    let self = this;
-    let isPublicFlag = isPublic && (isPublic.toString().toLowerCase() === 'true');
     const templatesUrl = this._getUrl('/v1/templates');
     return new Promise((resolve, reject) => {
-      self.xray.captureAsyncFunc('Stereotype.postTemplate', function(subsegment) {
+      this.xray.captureAsyncFunc('Stereotype.postTemplate', (subsegment) => {
         subsegment.addAnnotation('URL', templatesUrl);
         subsegment.addAnnotation('RESTAction', 'POST');
 
-        // Validate the body type, err via a Promise:
-        if (!StereotypeClient._isSupportedContentType(contentType)) {
-          let err = new Error('Invalid content type: ' + contentType);
+        this._createTemplate(templatesUrl, 'POST', bodyTemplate, contentType, isPublic)
+        .then((res) => {
+          subsegment.addAnnotation('ResponseCode', res.status);
+          subsegment.addAnnotation('TemplateLocation', res.headers.location);
+          subsegment.close();
+          resolve({
+           status: res.status,
+           templateId: res.headers.location.replace('/v1/templates/', ''),
+          });
+        })
+        .catch((err) => {
+          subsegment.addAnnotation('ResponseCode', err.status);
           subsegment.close(err);
           reject(err);
-        }
-
-        request.post(templatesUrl)
-          .set('Authorization', 'Bearer ' + self.accessToken)
-          .set('Content-Type', contentType)
-          .set('x-cimpress-template-public', isPublicFlag.toString())
-          .send(bodyTemplate || '')
-          .then(
-            (res) => {
-              subsegment.addAnnotation('ResponseCode', res.status);
-              subsegment.addAnnotation('TemplateLocation', res.headers.location);
-              subsegment.close();
-              resolve({
-               status: res.status,
-               templateId: res.headers.location.replace('/v1/templates/', ''),
-              });
-            }
-          ).catch((err) => {
-            subsegment.addAnnotation('ResponseCode', err.status);
-            subsegment.close(err);
-            reject(err);
-          });
+        });
       }); // Closes self.xray.captureAsyncFunc()
     }); // Closes new Promise()
   }
