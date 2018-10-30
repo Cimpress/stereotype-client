@@ -113,23 +113,56 @@ describe('Stereotype client', function () {
       });
 
       [true, 'true', 'True'].forEach(isPublic => {
-        it(`creates a new valid public ${isPublic} template`, function () {
+        it(`creates a new valid public ${isPublic} template PUT`, function () {
           nockRequest.put(`/v1/templates/${templateName}`)
             .matchHeader('x-cimpress-template-public', 'true')
             .reply(201);
 
           return expect(client.putTemplate(templateName, templBody, contentType, isPublic)).to.eventually.be.fulfilled;
         });
+
+        it(`creates a new valid public ${isPublic} template POST`, function (done) {
+          const templateId = "mytemplateid"
+          nockRequest.post(`/v1/templates`)
+            .matchHeader('x-cimpress-template-public', 'true')
+            .reply(201, templateId, {
+              'location': `/v1/templates/${templateId}`,
+            });
+            
+          client.createTemplate(templBody, contentType, isPublic)
+            .then(res => {
+              expect(res.status).to.equal(201);
+              expect(res.templateId).to.equal(templateId);
+              done();
+            });
+        });
       });
 
       [undefined, 'false', false, 'False'].forEach(isPublic => {
-        it(`creates a new valid private (${isPublic}) template`, function () {
+        it(`creates a new valid private (${isPublic}) template PUT`, function () {
           nockRequest
             .matchHeader('x-cimpress-template-public', 'false')
             .put(`/v1/templates/${templateName}`)
             .reply(201);
 
           return expect(client.putTemplate(templateName, templBody, contentType, isPublic)).to.eventually.be.fulfilled;
+        });
+
+        it(`creates a new valid private (${isPublic}) template POST`, function (done) {
+          const templateId = "mytemplateid"
+          nockRequest
+            .matchHeader('x-cimpress-template-public', 'false')
+            .post(`/v1/templates`)
+            .reply(201, templateId, {
+              'location': `/v1/templates/${templateId}`,
+            });
+            
+            client.createTemplate(templBody, contentType, isPublic)
+            .then(res => {
+              expect(res.status).to.equal(201);
+              expect(res.templateId).to.equal(templateId);
+              done();
+            });
         });
       });
 
@@ -158,11 +191,19 @@ describe('Stereotype client', function () {
         });
       });
 
-      it('fails to create a template with bad permissions', function () {
-        nockRequest.put(`/v1/templates/${templateName}`)
+      it('fails to create a template with bad permissions PUT', function () {
+        let noPermissionsTemplateId = "no-permissions"
+        nockRequest.put(`/v1/templates/${noPermissionsTemplateId}`)
           .reply(403);
 
-        return expect(client.putTemplate(templateName, templBody, contentType)).to.eventually.be.rejected;
+        return expect(client.putTemplate(noPermissionsTemplateId, templBody, contentType)).to.eventually.be.rejected;
+      });
+
+      it('fails to create a template with bad permissions POST', function () {
+        nockRequest.post(`/v1/templates`)
+          .reply(403);
+
+        return expect(client.createTemplate(templBody, contentType)).to.eventually.be.rejected;
       });
     });
 
