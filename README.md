@@ -29,6 +29,14 @@ sc.getTemplate('Greeting')
     (template) => console.log(template),
     (err) => console.log('ERROR:\n', err.message));
 
+// Get a list of templates:
+let skipCache = false;
+let includePublic = false; //Include public templates
+sc.listTemplates(skipCache, includePublic)
+  .then(
+    (template) => console.log(template),
+    (err) => console.log('ERROR:\n', err.message));
+
 // Materialize a template:
 sc.materialize('Greeting', {
   "name": "Zoidberg"
