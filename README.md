@@ -34,7 +34,11 @@ let skipCache = false;
 let includePublic = false; //Include public templates
 sc.listTemplates(skipCache, includePublic)
   .then(
-    (template) => console.log(template),
+    (template) => {
+      console.log(template.templateId);
+      console.log(template.canCopy); // Boolean
+      console.log(template.canEdit); // Boolean
+    },
     (err) => console.log('ERROR:\n', err.message));
 
 // Materialize a template:
