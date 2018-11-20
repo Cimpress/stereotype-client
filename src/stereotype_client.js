@@ -560,7 +560,7 @@ class StereotypeClient {
     let self = this;
     let expandUrl = this._getUrl('/v1/expand');
     return new Promise((resolve, reject) => {
-      self.xray.captureAsyncFunc('Stereotype.expand', function(subsegment) {
+      self.xray.captureAsyncFunc('Stereotype.expand', (subsegment) => {
         subsegment.addAnnotation('URL', expandUrl);
         subsegment.addAnnotation('RESTAction', 'POST');
 
