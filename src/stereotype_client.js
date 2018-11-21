@@ -601,7 +601,7 @@ class StereotypeClient {
               if (err.status === 400 && self.numRetries > 0 && isTimeoutError(err)) {
                 subsegment.addAnnotation('WillRetry: true');
                 subsegment.close(err);
-                resolve(expand(propertyBag, skipCache));
+                resolve(self.expand(propertyBag, skipCache));
               } else {
                 subsegment.addAnnotation('WillRetry: false');
                 subsegment.close(err);
