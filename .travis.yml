@@ -7,6 +7,7 @@ script:
 - npm run test
 - npm run build
 deploy:
+  skip_cleanup: true
   provider: npm
   email: TrdelnikSquad@cimpress.com
   api_key:
