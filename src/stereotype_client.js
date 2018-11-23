@@ -208,7 +208,7 @@ class StereotypeClient {
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
               subsegment.close();
-              console.log(res.text)
+              console.log(res.text);
               resolve(res.text);
             },
             (err) => {
