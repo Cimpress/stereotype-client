@@ -247,7 +247,7 @@ class StereotypeClient {
         subsegment.addAnnotation('REST Action', 'GET');
         subsegment.addAnnotation('Template', idTemplate);
 
-        let r = request
+        request
           .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Accept', 'application/json')
