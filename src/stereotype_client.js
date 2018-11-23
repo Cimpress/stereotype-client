@@ -176,21 +176,31 @@ class StereotypeClient {
    * @param {string} idTemplate
    * @param {boolean} skipCache
    */
-  getTemplate(idTemplate, skipCache = false) {
+  getTemplate(idTemplate, skipCache = false, doNotAddBody = false) {
     if (!idTemplate) {
       return Promise.reject({
         status: 404,
         message: `Template not found! Empty template ID provided.`,
       });
     }
+
+    if (doNotAddBody) {
+      return this._getTemplateInfo(idTemplate, skipCache);
+    }
+
+    return Promise.all([
+      this._getTemplateInfo(idTemplate, skipCache),
+      this._getTemplateBody(idTemplate, skipCache),
+    ]).then((data) => Object.assign({}, data[0], {templateBody: Base64.encode(data[1])}));
+  }
+
+  _getTemplateBody(idTemplate, skipCache) {
     let self = this;
+    let templatesUrl = this._getUrl('/v1/templates');
     return new Promise((resolve, reject) => {
-      let templatesUrl = this._getUrl('/v1/templates');
-      self.xray.captureAsyncFunc('Stereotype.getTemplate', function(subsegment) {
+      self.xray.captureAsyncFunc('Stereotype.getTemplateBody', function(subsegment) {
         subsegment.addAnnotation('URL', templatesUrl);
         subsegment.addAnnotation('REST Action', 'GET');
-        subsegment.addAnnotation('Template', idTemplate);
-
         request
           .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
@@ -198,12 +208,7 @@ class StereotypeClient {
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
               subsegment.close();
-              resolve({
-                templateType: res.type,
-                contentType: res.headers['content-type'],
-                templateBody: res.text,
-                isPublic: (res.headers['x-cimpress-template-public'] || '').toLowerCase() === 'true',
-              });
+              resolve(res.text);
             },
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
@@ -211,8 +216,36 @@ class StereotypeClient {
               reject(err);
             }
           );
-      }); // Closes self.xray.captureAsyncFunc()
-    }); // Closes new Promise()
+      });
+    });
+  }
+
+  _getTemplateInfo(idTemplate, skipCache) {
+    let self = this;
+    let templatesUrl = this._getUrl('/v1/templates');
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.getTemplateBody', function(subsegment) {
+        subsegment.addAnnotation('URL', templatesUrl);
+        subsegment.addAnnotation('REST Action', 'GET');
+
+        request
+          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .set('Accept', 'application/json')
+          .then(
+            (res) => {
+              subsegment.addAnnotation('ResponseCode', res.status);
+              subsegment.close();
+              resolve(res.body);
+            },
+            (err) => {
+              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.close(err);
+              reject(err);
+            }
+          );
+      });
+    });
   }
 
   /**
