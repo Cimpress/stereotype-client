@@ -176,76 +176,58 @@ class StereotypeClient {
    * @param {string} idTemplate
    * @param {boolean} skipCache
    */
-  getTemplate(idTemplate, skipCache = false, acceptHeader = undefined) {
+  getTemplate(idTemplate, skipCache = false, doNotAddBody = false) {
     if (!idTemplate) {
       return Promise.reject({
         status: 404,
         message: `Template not found! Empty template ID provided.`,
       });
     }
-    let self = this;
-    return new Promise((resolve, reject) => {
-      let templatesUrl = this._getUrl('/v1/templates');
-      self.xray.captureAsyncFunc('Stereotype.getTemplate', function(subsegment) {
-        subsegment.addAnnotation('URL', templatesUrl);
-        subsegment.addAnnotation('REST Action', 'GET');
-        subsegment.addAnnotation('Template', idTemplate);
 
-        let r = request
-          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
-          .set('Authorization', 'Bearer ' + self.accessToken);
+    if (doNotAddBody) {
+      return this._getTemplateInfo(idTemplate, skipCache);
+    }
 
-        if (acceptHeader) {
-          r.set('Accept', acceptHeader);
-        }
-
-        r.then(
-          (res) => {
-            subsegment.addAnnotation('ResponseCode', res.status);
-            subsegment.close();
-            resolve({
-              templateType: res.type,
-              contentType: res.headers['content-type'],
-              templateBody: res.text,
-              isPublic: (res.headers['x-cimpress-template-public'] || '').toLowerCase() === 'true',
-            });
-          },
-          (err) => {
-            subsegment.addAnnotation('ResponseCode', err.status);
-            subsegment.close(err);
-            reject(err);
-          }
-        );
-      }); // Closes self.xray.captureAsyncFunc()
-    }); // Closes new Promise()
+    return Promise.all([
+      this._getTemplateInfo(idTemplate, skipCache),
+      this._getTemplateBody(idTemplate, skipCache),
+    ]).then((data) => Object.assign({}, data[0], {templateBody: Base64.encode(data[1])}));
   }
 
-  /**
-   * Returns a promise with a JSON object with two fields:
-   * - templateType: text/dust, text/mustache, text/handlebars, etc.
-   * - templateBody: the template itself
-   *
-   * Sometimes when creating a template and accessing it a very short time later,
-   * it's possible to get a 404 'Template not found' because of caching along the way.
-   * In order to avoid that you can use the `skipCache` parameter here.
-   *
-   * @param {string} idTemplate
-   * @param {boolean} skipCache
-   */
-  getTemplateInfo(idTemplate, skipCache = false) {
-    if (!idTemplate) {
-      return Promise.reject({
-        status: 404,
-        message: `Template not found! Empty template ID provided.`,
-      });
-    }
+  _getTemplateBody(idTemplate, skipCache) {
     let self = this;
+    let templatesUrl = this._getUrl('/v1/templates');
     return new Promise((resolve, reject) => {
-      let templatesUrl = this._getUrl('/v1/templates');
-      self.xray.captureAsyncFunc('Stereotype.getTemplateInfo', function(subsegment) {
+      self.xray.captureAsyncFunc('Stereotype.getTemplateBody', function(subsegment) {
         subsegment.addAnnotation('URL', templatesUrl);
         subsegment.addAnnotation('REST Action', 'GET');
-        subsegment.addAnnotation('Template', idTemplate);
+        request
+          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .set('Authorization', 'Bearer ' + self.accessToken)
+          .then(
+            (res) => {
+              subsegment.addAnnotation('ResponseCode', res.status);
+              subsegment.close();
+              console.log(res.text)
+              resolve(res.text);
+            },
+            (err) => {
+              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.close(err);
+              reject(err);
+            }
+          );
+      });
+    });
+  }
+
+  _getTemplateInfo(idTemplate, skipCache) {
+    let self = this;
+    let templatesUrl = this._getUrl('/v1/templates');
+    return new Promise((resolve, reject) => {
+      self.xray.captureAsyncFunc('Stereotype.getTemplateBody', function(subsegment) {
+        subsegment.addAnnotation('URL', templatesUrl);
+        subsegment.addAnnotation('REST Action', 'GET');
 
         request
           .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
@@ -263,8 +245,8 @@ class StereotypeClient {
               reject(err);
             }
           );
-      }); // Closes self.xray.captureAsyncFunc()
-    }); // Closes new Promise()
+      });
+    });
   }
 
   /**
