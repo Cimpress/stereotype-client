@@ -69,6 +69,18 @@ describe('Stereotype client', function () {
         });
       });
 
+      it('reads template info', function () {
+        nockRequest.get(`/v1/templates/${templateName}`)
+          .reply(200, {
+            a: 'b'
+          });
+
+        return client.getTemplateInfo(templateName).then((tpl) => {
+          console.log(tpl);
+          expect(tpl.a).to.equal('b');
+        });
+      });
+
       it('reads a private template', function () {
         nockRequest.get(`/v1/templates/${templateName}`)
           .reply(200, templBody, {

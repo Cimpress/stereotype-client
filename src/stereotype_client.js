@@ -176,7 +176,7 @@ class StereotypeClient {
    * @param {string} idTemplate
    * @param {boolean} skipCache
    */
-  getTemplate(idTemplate, skipCache = false) {
+  getTemplate(idTemplate, skipCache = false, acceptHeader = undefined) {
     if (!idTemplate) {
       return Promise.reject({
         status: 404,
@@ -191,19 +191,71 @@ class StereotypeClient {
         subsegment.addAnnotation('REST Action', 'GET');
         subsegment.addAnnotation('Template', idTemplate);
 
-        request
+        let r = request
+          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .set('Authorization', 'Bearer ' + self.accessToken);
+
+        if (acceptHeader) {
+          r.set('Accept', acceptHeader);
+        }
+
+        r.then(
+          (res) => {
+            subsegment.addAnnotation('ResponseCode', res.status);
+            subsegment.close();
+            resolve({
+              templateType: res.type,
+              contentType: res.headers['content-type'],
+              templateBody: res.text,
+              isPublic: (res.headers['x-cimpress-template-public'] || '').toLowerCase() === 'true',
+            });
+          },
+          (err) => {
+            subsegment.addAnnotation('ResponseCode', err.status);
+            subsegment.close(err);
+            reject(err);
+          }
+        );
+      }); // Closes self.xray.captureAsyncFunc()
+    }); // Closes new Promise()
+  }
+
+  /**
+   * Returns a promise with a JSON object with two fields:
+   * - templateType: text/dust, text/mustache, text/handlebars, etc.
+   * - templateBody: the template itself
+   *
+   * Sometimes when creating a template and accessing it a very short time later,
+   * it's possible to get a 404 'Template not found' because of caching along the way.
+   * In order to avoid that you can use the `skipCache` parameter here.
+   *
+   * @param {string} idTemplate
+   * @param {boolean} skipCache
+   */
+  getTemplateInfo(idTemplate, skipCache = false) {
+    if (!idTemplate) {
+      return Promise.reject({
+        status: 404,
+        message: `Template not found! Empty template ID provided.`,
+      });
+    }
+    let self = this;
+    return new Promise((resolve, reject) => {
+      let templatesUrl = this._getUrl('/v1/templates');
+      self.xray.captureAsyncFunc('Stereotype.getTemplateInfo', function(subsegment) {
+        subsegment.addAnnotation('URL', templatesUrl);
+        subsegment.addAnnotation('REST Action', 'GET');
+        subsegment.addAnnotation('Template', idTemplate);
+
+        let r = request
           .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
+          .set('Accept', 'application/json')
           .then(
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
               subsegment.close();
-              resolve({
-                templateType: res.type,
-                contentType: res.headers['content-type'],
-                templateBody: res.text,
-                isPublic: (res.headers['x-cimpress-template-public'] || '').toLowerCase() === 'true',
-              });
+              resolve(res.body);
             },
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
