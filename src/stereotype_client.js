@@ -79,6 +79,7 @@ class StereotypeClient {
       .split(',')
       .map((pp) => pp.toLowerCase().trim())
       .filter((pp) => pp !== '');
+
     let validPostProcessor = true;
     postProcessors.forEach( (pp) => {
       if (!supportedPostProcessors.includes(pp)) {
@@ -271,7 +272,7 @@ class StereotypeClient {
           .then((res) => {
             subsegment.addAnnotation('ResponseCode', res.status);
             subsegment.close();
-            resolve(res.status);
+            resolve(res.body);
           })
           .catch((err) => {
             subsegment.addAnnotation('ResponseCode', err.status);
@@ -296,6 +297,7 @@ class StereotypeClient {
       .set('Authorization', 'Bearer ' + this.accessToken)
       .set('Content-Type', contentType)
       .set('x-cimpress-template-public', isPublicFlag.toString())
+      .set('Accept', 'application/json')
       .send(bodyTemplate || '');
   }
 
@@ -305,7 +307,7 @@ class StereotypeClient {
    * @param {string} bodyTemplate The body of the template.
    * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
    *    when bodyTemplate is passed.
-   * @param {bool} isPublic Shows whether to set the tempalte as public or not. Optional, defaults to false.
+   * @param {bool} isPublic Shows whether to set the template as public or not. Optional, defaults to false.
    */
   createTemplate(bodyTemplate = null, contentType = null, isPublic = false) {
     const templatesUrl = this._getUrl('/v1/templates');
@@ -319,10 +321,7 @@ class StereotypeClient {
           subsegment.addAnnotation('ResponseCode', res.status);
           subsegment.addAnnotation('TemplateLocation', res.headers.location);
           subsegment.close();
-          resolve({
-           status: res.status,
-           templateId: res.headers.location.replace('/v1/templates/', ''),
-          });
+          resolve(res.body);
         })
         .catch((err) => {
           subsegment.addAnnotation('ResponseCode', err.status);
