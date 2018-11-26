@@ -105,6 +105,10 @@ class StereotypeClient {
     this.curieHeader = String(headerValue);
   }
 
+  setMaximumCrawlDepthHeader(headerValue) {
+    this.maximumCrawlDepthHeader = String(headerValue);
+  }
+
   /**
    * Specifies a curie for a given link relation.
    * If the curie header is set explicitly with setCurieHeader,
@@ -417,6 +421,9 @@ class StereotypeClient {
         } else if (Object.keys(self.curies).length) {
           req.set('x-cimpress-rel-curies', self._constructCurieHeader());
         }
+        if (self.maximumCrawlDepthHeader) {
+          req.set('x-cimpress-max-depth', self.maximumCrawlDepthHeader);
+        }
         if (preferAsync) {
           req.set('prefer', 'respond-async');
         }
@@ -511,6 +518,9 @@ class StereotypeClient {
           req.set('x-cimpress-rel-curies', self.curieHeader);
         } else if (Object.keys(self.curies).length) {
           req.set('x-cimpress-rel-curies', self._constructCurieHeader());
+        }
+        if (self.maximumCrawlDepthHeader) {
+          req.set('x-cimpress-max-depth', self.maximumCrawlDepthHeader);
         }
         if (preferAsync) {
           req.set('prefer', 'respond-async');
@@ -616,6 +626,9 @@ class StereotypeClient {
           req.set('x-cimpress-rel-curies', self.curieHeader);
         } else if (Object.keys(self.curies).length) {
           req.set('x-cimpress-rel-curies', self._constructCurieHeader());
+        }
+        if (self.maximumCrawlDepthHeader) {
+          req.set('x-cimpress-max-depth', self.maximumCrawlDepthHeader);
         }
 
         req.send(propertyBag)
