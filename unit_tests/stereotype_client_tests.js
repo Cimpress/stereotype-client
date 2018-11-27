@@ -36,10 +36,6 @@ function getSampleTemplateResource(templateId, contentType) {
   return info;
 }
 
-function equalJson(expected, received) {
-  expect(expected).to.deep.equal(received);
-}
-
 describe('Stereotype client', function() {
   beforeEach(function() {
     // All we need is the right URL and a valid auth token.
@@ -139,7 +135,7 @@ describe('Stereotype client', function() {
       return client
         .createTemplate(templBody, contentType, isPublic)
         .then((templateInfo) => {
-          equalJson(templateInfo, getSampleTemplateResource(templateName));
+          expect(getSampleTemplateResource(templateName)).to.deep.equal(templateInfo)
         });
     });
   });
@@ -155,7 +151,7 @@ describe('Stereotype client', function() {
 
       return client.putTemplate(templateName, templBody, contentType, isPublic)
         .then((templateInfo) => {
-          equalJson(getSampleTemplateResource(templateName), templateInfo);
+          expect(getSampleTemplateResource(templateName)).to.deep.equal(templateInfo)
         });
     });
 
@@ -171,7 +167,7 @@ describe('Stereotype client', function() {
         return client
           .createTemplate(templBody, contentType, isPublic)
           .then((templateInfo) => {
-            equalJson(getSampleTemplateResource(templateId), templateInfo);
+            expect(getSampleTemplateResource(templateId)).to.deep.equal(templateInfo)
           });
     });
   });
@@ -183,7 +179,7 @@ describe('Stereotype client', function() {
     return client
       .putTemplate(templateName, templBody, contentType)
       .then(info => {
-        equalJson(getSampleTemplateResource(templateName, contentType), info)
+        expect(getSampleTemplateResource(templateName, contentType)).to.deep.equal(info)
       });
   });
 
@@ -198,7 +194,7 @@ describe('Stereotype client', function() {
       return client
         .putTemplate(templateName, templBody, fullContentType)
         .then((templateInfo) => {
-          equalJson(getSampleTemplateResource(templateName, fullContentType), templateInfo);
+          expect(getSampleTemplateResource(templateName, fullContentType)).to.deep.equal(templateInfo)
         });
     });
   });
