@@ -143,7 +143,7 @@ class StereotypeClient {
 
         let paramsObj = {'public': includePublic};
         if (skipCache) {
-          paramsObj.skip_cache = Date.now();
+          paramsObj.skip_cache = Math.random();
         }
         let params = qs.stringify(paramsObj);
         request
@@ -203,7 +203,7 @@ class StereotypeClient {
         subsegment.addAnnotation('URL', templatesUrl);
         subsegment.addAnnotation('REST Action', 'GET');
         request
-          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -230,7 +230,7 @@ class StereotypeClient {
         subsegment.addAnnotation('REST Action', 'GET');
 
         request
-          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Accept', 'application/json')
           .then(
@@ -346,7 +346,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'DELETE');
         subsegment.addAnnotation('Template', idTemplate);
 
-        request.delete(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+        request.delete(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -397,7 +397,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'POST');
 
         let req = request
-          .post(materializationsUrl + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .post(materializationsUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', self.timeout);
@@ -492,7 +492,7 @@ class StereotypeClient {
         subsegment.addAnnotation('Template', idTemplate);
 
         let req = request
-          .post(templatesMaterializationUrl + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .post(templatesMaterializationUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', self.timeout);
@@ -564,7 +564,7 @@ class StereotypeClient {
         subsegment.addAnnotation('TemplateMaterialization', idMaterialization);
 
         request
-          .get(materializationsUrl + '/' + idMaterialization + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .get(materializationsUrl + '/' + idMaterialization + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -597,7 +597,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'POST');
 
         let req = request
-          .post(expandUrl + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .post(expandUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', self.timeout);
@@ -659,7 +659,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'GET');
 
         request
-          .get(baseUrl + 'livecheck' + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .get(baseUrl + 'livecheck' + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -689,7 +689,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'GET');
 
         request
-          .get(swaggerUrl + (skipCache ? `?skip_cache=${Date.now()}` : ''))
+          .get(swaggerUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
