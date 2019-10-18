@@ -609,6 +609,7 @@ class StereotypeClient {
 
         let req = request
           .post(expandUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', self.timeout);
@@ -674,6 +675,7 @@ class StereotypeClient {
 
         request
           .get(baseUrl + 'livecheck' + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -704,6 +706,7 @@ class StereotypeClient {
 
         request
           .get(swaggerUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
