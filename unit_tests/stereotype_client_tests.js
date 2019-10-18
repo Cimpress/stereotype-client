@@ -37,6 +37,9 @@ function getSampleTemplateResource(templateId, contentType) {
 }
 
 describe('Stereotype client', function() {
+
+  this.timeout(10000);
+
   beforeEach(function() {
     // All we need is the right URL and a valid auth token.
     nock.cleanAll();
@@ -321,7 +324,7 @@ describe('Stereotype client', function() {
   });
 
   it('handles 500', function() {
-    nockRequest.get('/livecheck').reply(500);
+    nockRequest.get('/livecheck').times(100).reply(500);
     return expect(client.livecheck()).to.be.rejected;
   });
 
@@ -336,7 +339,7 @@ describe('Stereotype client', function() {
   });
 
   it('handles 500', function() {
-    nockRequest.get(`/v1/swagger.json`).reply(500);
+    nockRequest.get(`/v1/swagger.json`).times(100).reply(500);
     return expect(client.getSwagger()).to.be.rejected;
   });
 });
