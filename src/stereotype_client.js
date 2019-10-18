@@ -46,6 +46,7 @@ class StereotypeClient {
 
     this.xray = options.xray || StereotypeClient._getDummyXray();
     this.timeout = options.timeout || defaultConf.timeout;
+    this.deadline = options.deadline || defaultConf.deadline;
     this.numRetries = options.numRetries || defaultConf.numRetries;
 
     this.curies = {};
