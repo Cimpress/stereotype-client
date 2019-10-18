@@ -7,7 +7,8 @@ const qs = require('qs');
 
 const defaultConf = {
   baseUrl: 'https://stereotype.trdlnk.cimpress.io',
-  timeout: 5000,
+  timeout: 5000, // Wait 5 seconds for the server to start sending,
+  deadline: 60000, // but allow 1 minute for the file to finish loading.
   numRetries: 3,
 };
 
@@ -353,6 +354,11 @@ class StereotypeClient {
 
         request.delete(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
+          .timeout({
+            response: self.timeout,
+            deadline: self.deadline,
+          })
+          .retry(self.numRetries)
           .then(
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
@@ -403,6 +409,11 @@ class StereotypeClient {
 
         let req = request
           .post(materializationsUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .timeout({
+            response: self.timeout,
+            deadline: self.deadline,
+          })
+          .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', self.timeout);
@@ -501,6 +512,11 @@ class StereotypeClient {
 
         let req = request
           .post(templatesMaterializationUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .timeout({
+            response: self.timeout,
+            deadline: self.deadline,
+          })
+          .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', self.timeout);
@@ -576,6 +592,11 @@ class StereotypeClient {
 
         request
           .get(materializationsUrl + '/' + idMaterialization + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .timeout({
+            response: self.timeout,
+            deadline: self.deadline,
+          })
+          .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -609,6 +630,10 @@ class StereotypeClient {
 
         let req = request
           .post(expandUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .timeout({
+            response: self.timeout,
+            deadline: self.deadline,
+          })
           .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Content-Type', 'application/json')
@@ -675,6 +700,10 @@ class StereotypeClient {
 
         request
           .get(baseUrl + 'livecheck' + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .timeout({
+            response: self.timeout,
+            deadline: self.deadline,
+          })
           .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
@@ -706,6 +735,10 @@ class StereotypeClient {
 
         request
           .get(swaggerUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .timeout({
+            response: self.timeout,
+            deadline: self.deadline,
+          })
           .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
