@@ -48,6 +48,7 @@ class StereotypeClient {
     this.timeout = options.timeout || defaultConf.timeout;
     this.deadline = options.deadline || defaultConf.deadline;
     this.numRetries = options.numRetries || defaultConf.numRetries;
+    this.isBinaryResponse = options.isBinaryResponse || false;
 
     this.curies = {};
   }
@@ -101,6 +102,10 @@ class StereotypeClient {
     this.whitelistHeader = String(headerValue);
   }
 
+  setAcceptHeader(headerValue) {
+    this.acceptHeader = String(headerValue);
+  }
+
   setAcceptPreferenceHeader(headerValue) {
     this.acceptPreferenceHeader = String(headerValue);
   }
@@ -111,6 +116,10 @@ class StereotypeClient {
 
   setMaximumCrawlDepthHeader(headerValue) {
     this.maximumCrawlDepthHeader = String(headerValue);
+  }
+
+  handleBinaryResponse(binary) {
+    this.isBinaryResponse = Boolean(binary);
   }
 
   /**
@@ -425,6 +434,9 @@ class StereotypeClient {
         if (self.whitelistHeader) {
           req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
         }
+        if (self.acceptHeader) {
+          req.set('accept', self.acceptHeader);
+        }
         if (self.acceptPreferenceHeader) {
           req.set('x-cimpress-accept-preference', self.acceptPreferenceHeader);
         }
@@ -511,8 +523,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'POST');
         subsegment.addAnnotation('Template', idTemplate);
 
-        let req = request
-          .post(templatesMaterializationUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+        let req = request.post(templatesMaterializationUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .timeout({
             response: self.timeout,
             deadline: self.deadline,
@@ -522,11 +533,17 @@ class StereotypeClient {
           .set('Content-Type', 'application/json')
           .set('x-cimpress-link-timeout', self.timeout);
 
+        if (self.isBinaryResponse) {
+          req.responseType('blob');
+        }
         if (self.blacklistHeader) {
           req.set('x-cimpress-rel-blacklist', self.blacklistHeader);
         }
         if (self.whitelistHeader) {
           req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
+        }
+        if (self.acceptHeader) {
+          req.set('accept', self.acceptHeader);
         }
         if (self.acceptPreferenceHeader) {
           req.set('x-cimpress-accept-preference', self.acceptPreferenceHeader);
@@ -561,9 +578,10 @@ class StereotypeClient {
                   result: res.headers.location,
                 });
               } else { // sync
+                console.log(res);
                 resolve({
                   status: res.status,
-                  result: res.text,
+                  result: self.isBinaryResponse ? res.body : res.text,
                 });
               }
             })
@@ -591,9 +609,14 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'GET');
         subsegment.addAnnotation('TemplateMaterialization', idMaterialization);
 
-        request
-          .get(materializationsUrl + '/' + idMaterialization + (skipCache ? `?skip_cache=${Math.random()}` : ''))
-          .timeout({
+        let req = request
+          .get(materializationsUrl + '/' + idMaterialization + (skipCache ? `?skip_cache=${Math.random()}` : ''));
+
+        if (self.isBinaryResponse) {
+          req.responseType('blob');
+        }
+
+        req.timeout({
             response: self.timeout,
             deadline: self.deadline,
           })
@@ -603,7 +626,7 @@ class StereotypeClient {
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
               subsegment.close();
-              resolve(res.text);
+              resolve(self.isBinaryResponse ? res.body : res.text);
             },
             (err) => {
               subsegment.addAnnotation('ResponseCode', err.status);
@@ -645,6 +668,9 @@ class StereotypeClient {
         }
         if (self.whitelistHeader) {
           req.set('x-cimpress-rel-whitelist', self.whitelistHeader);
+        }
+        if (self.acceptHeader) {
+          req.set('accept', self.acceptHeader);
         }
         if (self.acceptPreferenceHeader) {
           req.set('x-cimpress-accept-preference', self.acceptPreferenceHeader);
