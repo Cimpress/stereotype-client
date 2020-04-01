@@ -578,7 +578,6 @@ class StereotypeClient {
                   result: res.headers.location,
                 });
               } else { // sync
-                console.log(res);
                 resolve({
                   status: res.status,
                   result: self.isBinaryResponse ? res.body : res.text,
