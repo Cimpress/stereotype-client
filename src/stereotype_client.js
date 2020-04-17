@@ -118,6 +118,10 @@ class StereotypeClient {
     this.maximumCrawlDepthHeader = String(headerValue);
   }
 
+  setCrawlerSoftErrors(headerValue) {
+    this.crawlerSoftErrors = String(headerValue);
+  }
+
   handleBinaryResponse(binary) {
     this.isBinaryResponse = Boolean(binary);
   }
@@ -447,6 +451,9 @@ class StereotypeClient {
         }
         if (self.maximumCrawlDepthHeader) {
           req.set('x-cimpress-max-depth', self.maximumCrawlDepthHeader);
+        }
+        if (self.crawlerSoftErrors) {
+          req.set('x-cimpress-crawler-soft-errors', self.crawlerSoftErrors);
         }
         if (preferAsync) {
           req.set('prefer', 'respond-async');
