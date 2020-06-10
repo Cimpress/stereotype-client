@@ -1,6 +1,6 @@
 {
   "name": "stereotype-client",
-  "version": "4.5.0",
+  "version": "5.0.0",
   "description": "A simple client for Cimpress' Stereotype service.",
   "scripts": {
     "test": "grunt test",
@@ -15,7 +15,7 @@
     "stereotype",
     "client"
   ],
-  "author": "Ivaylo Novakov <inovakov@gmail.com>",
+  "author": "Trdelnik Squad <TrdelnikSquad@cimpress.com>",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/Cimpress/stereotype-client/issues"

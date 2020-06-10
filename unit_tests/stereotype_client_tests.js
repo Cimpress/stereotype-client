@@ -72,7 +72,7 @@ describe('Stereotype client', function() {
       });
   });
 
-  it('reads a template', function() {
+  it('reads a template by id', function() {
     // Important: Mock the request with more headers first!
     nock(StereotypeOptions.baseUrl, {
       reqheaders: {
@@ -94,7 +94,36 @@ describe('Stereotype client', function() {
       .get(`/v1/templates/${templateName}`)
       .reply(200, templBody);
 
-    return client.getTemplate(templateName).then((tpl) => {
+    return client.getTemplateById(templateName).then((tpl) => {
+      expect(tpl.templateBody).to.equal(Base64.encode(templBody));
+      expect(tpl.contentType).to.equal(templateType);
+      expect(tpl.isPublic).to.be.false;
+    });
+  });
+
+  it('reads a template by url', function() {
+    // Important: Mock the request with more headers first!
+    nock(StereotypeOptions.baseUrl, {
+      reqheaders: {
+        'Authorization': 'Bearer demo_Auth0_v2_token',
+        'Accept': 'application/json',
+      },
+    })
+      .get(`/v1/templates/${templateName}`)
+      .reply(200, {
+        contentType: templateType,
+        isPublic: false,
+      });
+
+    nock(StereotypeOptions.baseUrl, {
+      reqheaders: {
+        'Authorization': 'Bearer demo_Auth0_v2_token',
+      },
+    })
+      .get(`/v1/templates/${templateName}`)
+      .reply(200, templBody);
+
+    return client.getTemplate(`${StereotypeOptions.baseUrl}/v1/templates/${templateName}`).then((tpl) => {
       expect(tpl.templateBody).to.equal(Base64.encode(templBody));
       expect(tpl.contentType).to.equal(templateType);
       expect(tpl.isPublic).to.be.false;
@@ -104,18 +133,18 @@ describe('Stereotype client', function() {
   it('fails to read a nonexistent template', function() {
     nockRequest.get(`/v1/templates/${templateName}`)
       .reply(404);
-    return expect(client.getTemplate(templateName)).to.eventually.be.rejected;
+    return expect(client.getTemplateById(templateName)).to.eventually.be.rejected;
   });
 
   it('fails to read a template with an empty name', function() {
-    return expect(client.getTemplate('')).to.eventually.be.rejected;
+    return expect(client.getTemplateById('')).to.eventually.be.rejected;
   });
 
   it('fails to read a template due to bad permissions', function() {
     nockRequest.get(`/v1/templates/${templateName}`)
       .reply(403);
 
-    return expect(client.getTemplate(templateName)).to.eventually.be.rejected;
+    return expect(client.getTemplateById(templateName)).to.eventually.be.rejected;
   });
 
   [true, 'true', 'True'].forEach((isPublic) => {
@@ -124,7 +153,7 @@ describe('Stereotype client', function() {
         .matchHeader('x-cimpress-template-public', 'true')
         .reply(201);
 
-      return expect(client.putTemplate(templateName, templBody, contentType, isPublic)).to.eventually.be.fulfilled;
+      return expect(client.putTemplateById(templateName, templBody, contentType, isPublic)).to.eventually.be.fulfilled;
     });
 
     it(`creates a new valid public ${isPublic} template POST`, function() {
@@ -152,7 +181,7 @@ describe('Stereotype client', function() {
           'location': `/v1/templates/${templateName}`,
         });
 
-      return client.putTemplate(templateName, templBody, contentType, isPublic)
+      return client.putTemplateById(templateName, templBody, contentType, isPublic)
         .then((templateInfo) => {
           expect(getSampleTemplateResource(templateName)).to.deep.equal(templateInfo)
         });
@@ -180,7 +209,7 @@ describe('Stereotype client', function() {
       .reply(200, getSampleTemplateResource(templateName, contentType));
 
     return client
-      .putTemplate(templateName, templBody, contentType)
+      .putTemplateById(templateName, templBody, contentType)
       .then(info => {
         expect(getSampleTemplateResource(templateName, contentType)).to.deep.equal(info)
       });
@@ -195,7 +224,7 @@ describe('Stereotype client', function() {
         });
 
       return client
-        .putTemplate(templateName, templBody, fullContentType)
+        .putTemplateById(templateName, templBody, fullContentType)
         .then((templateInfo) => {
           expect(getSampleTemplateResource(templateName, fullContentType)).to.deep.equal(templateInfo)
         });
@@ -209,7 +238,7 @@ describe('Stereotype client', function() {
           'location': `/v1/templates/${templateName}`,
         });
 
-      return expect(client.putTemplate(templateName, templBody, contentType + `; postProcessors=${pp}`)).to.eventually.be.rejected;
+      return expect(client.putTemplateById(templateName, templBody, contentType + `; postProcessors=${pp}`)).to.eventually.be.rejected;
     });
   });
 
@@ -218,7 +247,7 @@ describe('Stereotype client', function() {
     nockRequest.put(`/v1/templates/${noPermissionsTemplateId}`)
       .reply(403);
 
-    return expect(client.putTemplate(noPermissionsTemplateId, templBody, contentType)).to.eventually.be.rejected;
+    return expect(client.putTemplateById(noPermissionsTemplateId, templBody, contentType)).to.eventually.be.rejected;
   });
 
   it('fails to create a template with bad permissions POST', function() {
@@ -232,21 +261,21 @@ describe('Stereotype client', function() {
     nockRequest.delete(`/v1/templates/${templateName}`)
       .reply(200);
 
-    return expect(client.deleteTemplate(templateName)).to.eventually.be.fulfilled;
+    return expect(client.deleteTemplateById(templateName)).to.eventually.be.fulfilled;
   });
 
   it('fails to delete a non-existant template', function() {
     nockRequest.delete(`/v1/templates/NON-EXISTENT-TEMPLATE`)
       .reply(404);
 
-    return expect(client.deleteTemplate(templateName)).to.eventually.be.rejected;
+    return expect(client.deleteTemplateById(templateName)).to.eventually.be.rejected;
   });
 
   it('fails to delete a template with bad permissions', function() {
     nockRequest.delete(`/v1/templates/${templateName}`)
       .reply(403);
 
-    return expect(client.deleteTemplate(templateName)).to.eventually.be.rejected;
+    return expect(client.deleteTemplateById(templateName)).to.eventually.be.rejected;
   });
 
   it('materializes a template', function() {
@@ -256,7 +285,7 @@ describe('Stereotype client', function() {
         'content-type': contentType,
       });
 
-    return client.materialize(templateName)
+    return client.materializeById(templateName)
       .then((tpl) => expect(tpl).to.equal(materializedBody));
   });
 
@@ -268,7 +297,7 @@ describe('Stereotype client', function() {
         'location': `/v1/materializations/${matId}`,
       });
 
-    return client.materialize(templateName, propertyBag, true)
+    return client.materializeById(templateName, propertyBag, true)
       .then((tpl) => expect(tpl).to.equal(matId));
   });
 
@@ -298,7 +327,7 @@ describe('Stereotype client', function() {
         'content-type': contentType,
       });
 
-    return client.getMaterialization(materializationId)
+    return client.getMaterializationById(materializationId)
       .then((tpl) => expect(tpl).to.equal(materializedBody));
   });
 
@@ -306,7 +335,7 @@ describe('Stereotype client', function() {
     nockRequest.post(`/v1/templates/${templateName}/materializations`)
       .reply(403);
 
-    return expect(client.materialize(templateName)).to.eventually.be.rejected;
+    return expect(client.materializeById(templateName)).to.eventually.be.rejected;
   });
 
   it('expands a propertyBag', function() {

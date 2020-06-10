@@ -194,11 +194,28 @@ class StereotypeClient {
    * it's possible to get a 404 'Template not found' because of caching along the way.
    * In order to avoid that you can use the `skipCache` parameter here.
    *
-   * @param {string} idTemplate
+   * @param {string} templateUrl
    * @param {boolean} skipCache
    */
-  getTemplate(idTemplate, skipCache = false, doNotAddBody = false) {
-    if (!idTemplate) {
+  getTemplateById(templateId, skipCache = false, doNotAddBody = false) {
+    const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
+    return this.getTemplate(templateUrl, skipCache, doNotAddBody);
+  }
+
+  /**
+   * Returns a promise with a JSON object with two fields:
+   * - templateType: text/dust, text/mustache, text/handlebars, etc.
+   * - templateBody: the template itself
+   *
+   * Sometimes when creating a template and accessing it a very short time later,
+   * it's possible to get a 404 'Template not found' because of caching along the way.
+   * In order to avoid that you can use the `skipCache` parameter here.
+   *
+   * @param {string} templateUrl
+   * @param {boolean} skipCache
+   */
+  getTemplate(templateUrl, skipCache = false, doNotAddBody = false) {
+    if (!templateUrl) {
       return Promise.reject({
         status: 404,
         message: `Template not found! Empty template ID provided.`,
@@ -206,24 +223,24 @@ class StereotypeClient {
     }
 
     if (doNotAddBody) {
-      return this._getTemplateInfo(idTemplate, skipCache);
+      return this._getTemplateInfo(templateUrl, skipCache);
     }
 
     return Promise.all([
-      this._getTemplateInfo(idTemplate, skipCache),
-      this._getTemplateBody(idTemplate, skipCache),
+      this._getTemplateInfo(templateUrl, skipCache),
+      this._getTemplateBody(templateUrl, skipCache),
     ]).then((data) => Object.assign({}, data[0], {templateBody: Base64.encode(data[1])}));
   }
 
-  _getTemplateBody(idTemplate, skipCache) {
+  _getTemplateBody(templateUrl, skipCache) {
     let self = this;
-    let templatesUrl = this._getUrl('/v1/templates');
+    let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.getTemplateBody', function(subsegment) {
-        subsegment.addAnnotation('URL', templatesUrl);
+        subsegment.addAnnotation('URL', verifiedTemplateUrl);
         subsegment.addAnnotation('REST Action', 'GET');
         request
-          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .get(verifiedTemplateUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .then(
             (res) => {
@@ -241,16 +258,16 @@ class StereotypeClient {
     });
   }
 
-  _getTemplateInfo(idTemplate, skipCache) {
+  _getTemplateInfo(templateUrl, skipCache) {
     let self = this;
-    let templatesUrl = this._getUrl('/v1/templates');
+    let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.getTemplateBody', function(subsegment) {
-        subsegment.addAnnotation('URL', templatesUrl);
+        subsegment.addAnnotation('URL', verifiedTemplateUrl);
         subsegment.addAnnotation('REST Action', 'GET');
 
         request
-          .get(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+          .get(verifiedTemplateUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .set('Accept', 'application/json')
           .then(
@@ -272,7 +289,7 @@ class StereotypeClient {
   /**
    * Create or update a template. When bodyTemplate is null only the permissions are updated.
    *
-   * @param {string} idTemplate The name of the template we want to create or update.
+   * @param {string} templateId The id of the template we want to create or update.
    * @param {string} bodyTemplate The body of the template.
    * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
    *    when bodyTemplate is passed.
@@ -280,15 +297,31 @@ class StereotypeClient {
    * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
    *    Optional, defaults to false.
    */
-  putTemplate(idTemplate, bodyTemplate = null, contentType = null, isPublic = false, skipCache = false) {
-    let templatesUrl = this._getUrl('/v1/templates');
+  putTemplateById(templateId, bodyTemplate = null, contentType = null, isPublic = false, skipCache = false) {
+    const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
+    return this.putTemplate(templateUrl, bodyTemplate, contentType, isPublic, skipCache);
+  }
+
+  /**
+   * Create or update a template. When bodyTemplate is null only the permissions are updated.
+   *
+   * @param {string} templateUrl The name of the template we want to create or update.
+   * @param {string} bodyTemplate The body of the template.
+   * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
+   *    when bodyTemplate is passed.
+   * @param {bool} isPublic Shows whether to set the tempalte as public or not. Optional, defaults to false.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
+   */
+  putTemplate(templateUrl, bodyTemplate = null, contentType = null, isPublic = false, skipCache = false) {
+    let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
     return new Promise((resolve, reject) => {
       this.xray.captureAsyncFunc('Stereotype.putTemplate', (subsegment) => {
-        subsegment.addAnnotation('URL', templatesUrl);
+        subsegment.addAnnotation('URL', verifiedTemplateUrl);
         subsegment.addAnnotation('RESTAction', 'PUT');
-        subsegment.addAnnotation('Template', idTemplate);
+        subsegment.addAnnotation('Template', templateUrl);
 
-        this._createTemplate(`${templatesUrl}/${idTemplate}`, 'PUT', bodyTemplate, contentType, isPublic)
+        this._createTemplate(verifiedTemplateUrl, 'PUT', bodyTemplate, contentType, isPublic)
           .then((res) => {
             subsegment.addAnnotation('ResponseCode', res.status);
             subsegment.close();
@@ -355,18 +388,27 @@ class StereotypeClient {
   /**
    * Deletes a template.
    *
-   * @param {string} idTemplate The name of the template we want to delete.
+   * @param {string} templateUrl The name of the template we want to delete.
    */
-  deleteTemplate(idTemplate, skipCache = false) {
+  deleteTemplateById(templateId, skipCache = false) {
+    const templateUrl = this._getUrl(`/v1/templates/${templateId}`);
+    return this.deleteTemplate(templateUrl, skipCache);
+  }
+    /**
+   * Deletes a template.
+   *
+   * @param {string} templateUrl The name of the template we want to delete.
+   */
+  deleteTemplate(templateUrl, skipCache = false) {
     let self = this;
-    let templatesUrl = this._getUrl('/v1/templates');
+    let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.deleteTemplate', function(subsegment) {
-        subsegment.addAnnotation('URL', templatesUrl);
+        subsegment.addAnnotation('URL', verifiedTemplateUrl);
         subsegment.addAnnotation('RESTAction', 'DELETE');
-        subsegment.addAnnotation('Template', idTemplate);
+        subsegment.addAnnotation('Template', templateUrl);
 
-        request.delete(templatesUrl + '/' + idTemplate + (skipCache ? `?skip_cache=${Math.random()}` : ''))
+        request.delete(verifiedTemplateUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .set('Authorization', 'Bearer ' + self.accessToken)
           .timeout({
             response: self.timeout,
@@ -392,15 +434,30 @@ class StereotypeClient {
   /**
    * Creates a template materialization by populating a template with data.
    *
-   * @param {string} idTemplate
+   * @param {string} templateUrl
    * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
    *    to be resolved before timing out. Default is 5000ms
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materialize(idTemplate, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this.materializeSync(idTemplate, propertyBag, getMaterializationId, skipCache)
+  materializeById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
+    return this.materializeSyncById(templateId, propertyBag, getMaterializationId, skipCache)
+      .then((resultStruct) => resultStruct.result);
+  }
+
+  /**
+   * Creates a template materialization by populating a template with data.
+   *
+   * @param {string} templateUrl
+   * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
+   *    to be resolved before timing out. Default is 5000ms
+   * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
+   *    body. We can use that id later to fetch the materialized template without resending the properties.
+   *    Defaults to false.
+   */
+  materialize(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
+    return this.materializeSync(templateUrl, propertyBag, getMaterializationId, skipCache)
       .then((resultStruct) => resultStruct.result);
   }
 
@@ -490,14 +547,30 @@ class StereotypeClient {
    * The `result` field holds the materialization, while the `status` field is expected to always be `201`.
    * The main purpose of the `status` field is uniformity with the `materializeAsync` method.
    *
-   * @param {string} idTemplate
+   * @param {string} templateUrl
    * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeSync(idTemplate, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this._materialize(idTemplate, propertyBag, getMaterializationId, false, skipCache);
+  materializeSyncById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
+    const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache);
+  }
+
+  /**
+   * Returns a promise that resolves to an object with two fields - `status` and `result`.
+   * The `result` field holds the materialization, while the `status` field is expected to always be `201`.
+   * The main purpose of the `status` field is uniformity with the `materializeAsync` method.
+   *
+   * @param {string} templateUrl
+   * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
+   * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
+   *    body. We can use that id later to fetch the materialized template without resending the properties.
+   *    Defaults to false.
+   */
+  materializeSync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache);
   }
 
   /**
@@ -507,28 +580,44 @@ class StereotypeClient {
    * in case the preference for async execution was respected or `201` in case the server
    * decided to ignore the preference and execute the request synchronously.
    *
-   * @param {string} idTemplate
+   * @param {string} templateUrl
    * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeAsync(idTemplate, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this._materialize(idTemplate, propertyBag, getMaterializationId, true, skipCache);
+  materializeAsync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, true, skipCache);
   }
 
   _getUrl(path) {
     return this.baseUrl + path;
   }
 
-  _materialize(idTemplate, propertyBag, getMaterializationId = false, preferAsync = false, skipCache = false) {
+  _verifyTemplateUrl(path, templateUrl) {
+    const parts = templateUrl.split('/');
+    if (parts.length <= 0) {
+      throw new Error('Invalid template URL (parts)');
+    }
+    if (templateUrl !== (this.baseUrl + path + '/' + parts[parts.length-1])) {
+      throw new Error(`Invalid template URL (format) ${templateUrl} :: ${this.baseUrl + path + '/' + parts[parts.length-1]}`);
+    }
+    return templateUrl;
+  }
+
+  _materialize(templateUrl, propertyBag, getMaterializationId = false, preferAsync = false, skipCache = false) {
+    // TODO: we have to store materialization link at template to avoid URL construction
+    let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
+    const parts = verifiedTemplateUrl.split('/');
+    const templateId = parts[parts.length-1];
+
     let self = this;
-    let templatesMaterializationUrl = this._getUrl('/v1/templates' + '/' + idTemplate + '/materializations');
+    let templatesMaterializationUrl = this._getUrl('/v1/templates' + '/' + templateId + '/materializations');
     return new Promise((resolve, reject) => {
       self.xray.captureAsyncFunc('Stereotype.materialize', function(subsegment) {
         subsegment.addAnnotation('URL', templatesMaterializationUrl);
         subsegment.addAnnotation('RESTAction', 'POST');
-        subsegment.addAnnotation('Template', idTemplate);
+        subsegment.addAnnotation('Template', templateUrl);
 
         let req = request.post(templatesMaterializationUrl + (skipCache ? `?skip_cache=${Math.random()}` : ''))
           .timeout({
@@ -606,7 +695,7 @@ class StereotypeClient {
    *
    * @param {string} idMaterialization The id of the materialization, as returned by `materialize`.
    */
-  getMaterialization(idMaterialization, skipCache = false) {
+  getMaterializationById(idMaterialization, skipCache = false) {
     let self = this;
     let materializationsUrl = this._getUrl('/v1/materializations');
     return new Promise((resolve, reject) => {
