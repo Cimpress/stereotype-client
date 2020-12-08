@@ -21,7 +21,7 @@ const supportedContentTypes = {
 
 const supportedPostProcessors = [
   'mjml',
-  'xlsx'
+  'xlsx',
 ];
 
 const CURIE_SEPARATOR = ';';
