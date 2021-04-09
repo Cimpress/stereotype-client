@@ -177,7 +177,7 @@ class StereotypeClient {
               resolve(res.body);
             },
             (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.close(err);
               reject(err);
             }
@@ -250,7 +250,7 @@ class StereotypeClient {
               resolve(res.text);
             },
             (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.close(err);
               reject(err);
             }
@@ -278,7 +278,7 @@ class StereotypeClient {
               resolve(res.body);
             },
             (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.close(err);
               reject(err);
             }
@@ -329,7 +329,7 @@ class StereotypeClient {
             resolve(res.body);
           })
           .catch((err) => {
-            subsegment.addAnnotation('ResponseCode', err.status);
+            subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
             subsegment.close(err);
             reject(err);
           });
@@ -378,7 +378,7 @@ class StereotypeClient {
           resolve(res.body);
         })
         .catch((err) => {
-          subsegment.addAnnotation('ResponseCode', err.status);
+          subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
           subsegment.close(err);
           reject(err);
         });
@@ -423,7 +423,7 @@ class StereotypeClient {
               resolve(res.status);
             },
             (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.close(err);
               reject(err);
             }
@@ -535,7 +535,7 @@ class StereotypeClient {
             })
           .catch(
             (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.close(err);
               reject(err);
             }); // Closes request chain
@@ -683,7 +683,7 @@ class StereotypeClient {
             })
           .catch(
             (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.close(err);
               reject(err);
             }); // Closes request chain
@@ -725,7 +725,7 @@ class StereotypeClient {
               resolve(self.isBinaryResponse ? res.body : res.text);
             },
             (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.close(err);
               reject(err);
             }
@@ -790,7 +790,7 @@ class StereotypeClient {
             (err) => {
               let isTimeoutError = (err) => err.response.text.includes('ESOCKETTIMEDOUT');
 
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.addAnnotation('UnableToExpandPropertyBag: ' + err.message);
 
               if (err.status === 400 && self.numRetries > 0 && isTimeoutError(err)) {
@@ -836,7 +836,7 @@ class StereotypeClient {
               resolve(res && res.status == 200);
             },
             (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.close(err);
               reject(err);
             }
@@ -871,7 +871,7 @@ class StereotypeClient {
               resolve(res.body);
             },
             (err) => {
-              subsegment.addAnnotation('ResponseCode', err.status);
+              subsegment.addAnnotation('ResponseCode', err.status || 'n/a');
               subsegment.close(err);
               reject(err);
             }
