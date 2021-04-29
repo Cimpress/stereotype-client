@@ -16,7 +16,7 @@ const supportedContentTypes = {
   dust: ['text/dust'],
   mustache: ['text/mustache'],
   handlebars: ['text/handlebars', 'text/x-handlebars-template'],
-  edie: ['application/vnd.cimpress.edie+json'],
+  edie: ['application/vnd.cimpress.edie+json', 'application/vnd.cimpress.ediecsv+json'],
 };
 
 const supportedPostProcessors = [
