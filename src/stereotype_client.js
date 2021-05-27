@@ -298,9 +298,16 @@ class StereotypeClient {
    * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
    *    Optional, defaults to false.
    */
-  putTemplateById(templateId, bodyTemplate = null, contentType = null, isPublic = false, skipCache = false) {
+  putTemplateById(
+    templateId,
+    bodyTemplate = null,
+    contentType = null,
+    isPublic = false,
+    templateType = null,
+    templateName = null,
+    templateDescription = null) {
     const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
-    return this.putTemplate(templateUrl, bodyTemplate, contentType, isPublic, skipCache);
+    return this.putTemplate(templateUrl, bodyTemplate, contentType, isPublic, templateType, templateName, templateDescription);
   }
 
   /**
@@ -314,7 +321,14 @@ class StereotypeClient {
    * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
    *    Optional, defaults to false.
    */
-  putTemplate(templateUrl, bodyTemplate = null, contentType = null, isPublic = false, skipCache = false) {
+  putTemplate(
+    templateUrl,
+    bodyTemplate = null,
+    contentType = null,
+    isPublic = false,
+    templateType = null,
+    templateName = null,
+    templateDescription = null) {
     let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
     return new Promise((resolve, reject) => {
       this.xray.captureAsyncFunc('Stereotype.putTemplate', (subsegment) => {
@@ -322,7 +336,7 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'PUT');
         subsegment.addAnnotation('Template', templateUrl);
 
-        this._createTemplate(verifiedTemplateUrl, 'PUT', bodyTemplate, contentType, isPublic)
+        this._createTemplate(verifiedTemplateUrl, 'PUT', bodyTemplate, contentType, isPublic, templateType, templateName, templateDescription)
           .then((res) => {
             subsegment.addAnnotation('ResponseCode', res.status);
             subsegment.close();
@@ -337,7 +351,15 @@ class StereotypeClient {
     }); // Closes new Promise()
   }
 
-  _createTemplate(templateURL, method, bodyTemplate = null, contentType = null, isPublic = false) {
+  _createTemplate(
+    templateURL,
+    method,
+    bodyTemplate = null,
+    contentType = null,
+    isPublic = false,
+    templateType = null,
+    templateName = null,
+    templateDescription = null) {
     const isPublicFlag = isPublic && (isPublic.toString().toLowerCase() === 'true');
 
     if (!['POST', 'PUT'].includes(method)) {
@@ -351,6 +373,9 @@ class StereotypeClient {
       .set('Authorization', 'Bearer ' + this.accessToken)
       .set('Content-Type', contentType)
       .set('x-cimpress-template-public', isPublicFlag.toString())
+      .set('x-cimpress-template-type', templateType || 'raw')
+      .set('x-cimpress-template-name', templateName || '')
+      .set('x-cimpress-template-description', templateDescription || '')
       .set('Accept', 'application/json')
       .send(bodyTemplate || '');
   }
@@ -363,14 +388,20 @@ class StereotypeClient {
    *    when bodyTemplate is passed.
    * @param {bool} isPublic Shows whether to set the template as public or not. Optional, defaults to false.
    */
-  createTemplate(bodyTemplate = null, contentType = null, isPublic = false) {
+  createTemplate(
+    bodyTemplate = null,
+    contentType = null,
+    isPublic = false,
+    templateType = null,
+    templateName = null,
+    templateDescription = null) {
     const templatesUrl = this._getUrl('/v1/templates');
     return new Promise((resolve, reject) => {
       this.xray.captureAsyncFunc('Stereotype.postTemplate', (subsegment) => {
         subsegment.addAnnotation('URL', templatesUrl);
         subsegment.addAnnotation('RESTAction', 'POST');
 
-        this._createTemplate(templatesUrl, 'POST', bodyTemplate, contentType, isPublic)
+        this._createTemplate(templatesUrl, 'POST', bodyTemplate, contentType, isPublic, templateType, templateName, templateDescription)
         .then((res) => {
           subsegment.addAnnotation('ResponseCode', res.status);
           subsegment.addAnnotation('TemplateLocation', res.headers.location);
@@ -531,6 +562,7 @@ class StereotypeClient {
               resolve({
                 status: res.status,
                 result: res.text,
+                contentType: res.get('Content-Type'),
               });
             })
           .catch(
@@ -668,16 +700,19 @@ class StereotypeClient {
                 resolve({
                   status: res.status,
                   result: res.headers.location.substring(preStringLen),
+                  contentType: res.get('Content-Type'),
                 });
               } else if (res.status == 202) { // async
                 resolve({
                   status: res.status,
                   result: res.headers.location,
+                  contentType: res.get('Content-Type'),
                 });
               } else { // sync
                 resolve({
                   status: res.status,
                   result: self.isBinaryResponse ? res.body : res.text,
+                  contentType: res.get('Content-Type'),
                 });
               }
             })
