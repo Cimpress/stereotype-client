@@ -31,7 +31,7 @@ class StereotypeClient {
    * Instantiates a StereotypeClient, ready to work with templates.
    *
    * @param {string} accessToken Auth0 authentication token
-   * @param {string} xray An instance of AWS X-Ray (npm package aws-xray-sdk-core)
+   * @param {object} options A JSON Object that contains baseUrl, xray, timeout, deadline, numRetries, isBinaryResponse keys.
    */
   constructor(accessToken, options = {}) {
     this.accessToken = String(accessToken);
@@ -195,8 +195,9 @@ class StereotypeClient {
    * it's possible to get a 404 'Template not found' because of caching along the way.
    * In order to avoid that you can use the `skipCache` parameter here.
    *
-   * @param {string} templateUrl
+   * @param {string} templateId
    * @param {boolean} skipCache
+   * @param {boolean} doNotAddBody
    */
   getTemplateById(templateId, skipCache = false, doNotAddBody = false) {
     const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
@@ -214,6 +215,7 @@ class StereotypeClient {
    *
    * @param {string} templateUrl
    * @param {boolean} skipCache
+   * @param {boolean} doNotAddBody
    */
   getTemplate(templateUrl, skipCache = false, doNotAddBody = false) {
     if (!templateUrl) {
@@ -294,9 +296,10 @@ class StereotypeClient {
    * @param {string} bodyTemplate The body of the template.
    * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
    *    when bodyTemplate is passed.
-   * @param {bool} isPublic Shows whether to set the tempalte as public or not. Optional, defaults to false.
-   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
-   *    Optional, defaults to false.
+   * @param {bool} isPublic Shows whether to set the template as public or not. Optional, defaults to false.
+   * @param {string} templateType The type of the template, e.g. xemail, xcsv.
+   * @param {string} templateName The name of the template.
+   * @param {string} templateDescription The description of the template.
    */
   putTemplateById(
     templateId,
@@ -317,9 +320,10 @@ class StereotypeClient {
    * @param {string} bodyTemplate The body of the template.
    * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
    *    when bodyTemplate is passed.
-   * @param {bool} isPublic Shows whether to set the tempalte as public or not. Optional, defaults to false.
-   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
-   *    Optional, defaults to false.
+   * @param {bool} isPublic Shows whether to set the template as public or not. Optional, defaults to false.
+   * @param {string} templateType The type of the template, e.g. xemail, xcsv.
+   * @param {string} templateName The name of the template.
+   * @param {string} templateDescription The description of the template.
    */
   putTemplate(
     templateUrl,
@@ -387,6 +391,9 @@ class StereotypeClient {
    * @param {string} contentType The content type of the template, e.g. text/handlebars. Required
    *    when bodyTemplate is passed.
    * @param {bool} isPublic Shows whether to set the template as public or not. Optional, defaults to false.
+   * @param {string} templateType The type of the template, e.g. xemail, xcsv.
+   * @param {string} templateName The name of the template.
+   * @param {string} templateDescription The description of the template.
    */
   createTemplate(
     bodyTemplate = null,
@@ -420,7 +427,9 @@ class StereotypeClient {
   /**
    * Deletes a template.
    *
-   * @param {string} templateUrl The name of the template we want to delete.
+   * @param {string} templateId The id of the template we want to delete.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   deleteTemplateById(templateId, skipCache = false) {
     const templateUrl = this._getUrl(`/v1/templates/${templateId}`);
@@ -430,6 +439,8 @@ class StereotypeClient {
    * Deletes a template.
    *
    * @param {string} templateUrl The name of the template we want to delete.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   deleteTemplate(templateUrl, skipCache = false) {
     let self = this;
@@ -466,12 +477,14 @@ class StereotypeClient {
   /**
    * Creates a template materialization by populating a template with data.
    *
-   * @param {string} templateUrl
+   * @param {string} templateId
    * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
    *    to be resolved before timing out. Default is 5000ms
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   materializeById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
     return this.materializeSyncById(templateId, propertyBag, getMaterializationId, skipCache)
@@ -487,6 +500,8 @@ class StereotypeClient {
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   materialize(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
     return this.materializeSync(templateUrl, propertyBag, getMaterializationId, skipCache)
@@ -498,7 +513,9 @@ class StereotypeClient {
    * @param {object} template An object that contains template content and type. { contentType: x, content: y }
    *    contentType can be one of 'text/mustache', 'text/dust' or 'text/handlebars'
    * @param {object} propertyBag A JSON object that contains the data to be populated in the template.
-   * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
+   * @param {boolean} preferAsync Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
@@ -585,6 +602,8 @@ class StereotypeClient {
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   materializeSyncById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
     const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
@@ -601,6 +620,8 @@ class StereotypeClient {
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   materializeSync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
     return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache);
@@ -618,6 +639,8 @@ class StereotypeClient {
    * @param {boolean} getMaterializationId Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   materializeAsync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
     return this._materialize(templateUrl, propertyBag, getMaterializationId, true, skipCache);
@@ -730,6 +753,8 @@ class StereotypeClient {
    * Get an existing template materialization.
    *
    * @param {string} idMaterialization The id of the materialization, as returned by `materialize`.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   getMaterializationById(idMaterialization, skipCache = false) {
     let self = this;
@@ -774,6 +799,8 @@ class StereotypeClient {
    * they are populated into the target template.
    *
    * @param {object} propertyBag A JSON object that contains the data to be populated in a template.
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   expand(propertyBag, skipCache = false) {
     let self = this;
@@ -846,6 +873,8 @@ class StereotypeClient {
   /**
    * Returns the status of the service as a boolean (alive/dead) (via a promise).
    *
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    * @returns boolean
    */
   livecheck(skipCache = false) {
@@ -882,6 +911,9 @@ class StereotypeClient {
 
   /**
    * Returns the swagger file of the service (via a promise).
+   *
+   * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
+   *    Optional, defaults to false.
    */
   getSwagger(skipCache = false) {
     let self = this;
