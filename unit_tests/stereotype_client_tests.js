@@ -152,9 +152,9 @@ describe('Stereotype client', function() {
     it(`creates a new valid public ${isPublic} template PUT`, function() {
       nockRequest.put(`/v1/templates/${templateName}`)
         .matchHeader('x-cimpress-template-public', 'true')
-        .matchHeader('x-cimpress-template-type', templateType)
-        .matchHeader('x-cimpress-template-name', templateName)
-        .matchHeader('x-cimpress-template-description', templateDescription)
+        .matchHeader('x-cimpress-template-type', encodeURIComponent(templateType))
+        .matchHeader('x-cimpress-template-name', encodeURIComponent(templateName))
+        .matchHeader('x-cimpress-template-description', encodeURIComponent(templateDescription))
         .reply(201);
 
       return expect(client.putTemplateById(templateName, templBody, contentType, isPublic, templateType, templateName, templateDescription)).to.eventually.be.fulfilled;
@@ -164,9 +164,9 @@ describe('Stereotype client', function() {
       const templateId = 'mytemplateid';
       nockRequest.post(`/v1/templates`)
         .matchHeader('x-cimpress-template-public', 'true')
-        .matchHeader('x-cimpress-template-type', templateType)
-        .matchHeader('x-cimpress-template-name', templateName)
-        .matchHeader('x-cimpress-template-description', templateDescription)
+        .matchHeader('x-cimpress-template-type', encodeURIComponent(templateType))
+        .matchHeader('x-cimpress-template-name', encodeURIComponent(templateName))
+        .matchHeader('x-cimpress-template-description', encodeURIComponent(templateDescription))
         .reply(201, getSampleTemplateResource(templateName), {
           'location': `/v1/templates/${templateId}`,
         });
@@ -183,9 +183,9 @@ describe('Stereotype client', function() {
     it(`creates a new valid private (${isPublic}) template PUT`, function() {
       nockRequest
         .matchHeader('x-cimpress-template-public', 'false')
-        .matchHeader('x-cimpress-template-type', templateType)
-        .matchHeader('x-cimpress-template-name', templateName)
-        .matchHeader('x-cimpress-template-description', templateDescription)
+        .matchHeader('x-cimpress-template-type', encodeURIComponent(templateType))
+        .matchHeader('x-cimpress-template-name', encodeURIComponent(templateName))
+        .matchHeader('x-cimpress-template-description', encodeURIComponent(templateDescription))
         .put(`/v1/templates/${templateName}`)
         .reply(201, getSampleTemplateResource(templateName), {
           'location': `/v1/templates/${templateName}`,
@@ -201,9 +201,9 @@ describe('Stereotype client', function() {
       const templateId = 'mytemplateid';
       nockRequest
         .matchHeader('x-cimpress-template-public', 'false')
-        .matchHeader('x-cimpress-template-type', templateType)
-        .matchHeader('x-cimpress-template-name', templateName)
-        .matchHeader('x-cimpress-template-description', templateDescription)
+        .matchHeader('x-cimpress-template-type', encodeURIComponent(templateType))
+        .matchHeader('x-cimpress-template-name', encodeURIComponent(templateName))
+        .matchHeader('x-cimpress-template-description', encodeURIComponent(templateDescription))
         .post(`/v1/templates`)
         .reply(201, getSampleTemplateResource(templateId), {
           'location': `/v1/templates/${templateId}`,

@@ -377,9 +377,9 @@ class StereotypeClient {
       .set('Authorization', 'Bearer ' + this.accessToken)
       .set('Content-Type', contentType)
       .set('x-cimpress-template-public', isPublicFlag.toString())
-      .set('x-cimpress-template-type', templateType || 'raw')
-      .set('x-cimpress-template-name', templateName || '')
-      .set('x-cimpress-template-description', templateDescription || '')
+      .set('x-cimpress-template-type', templateType ? encodeURIComponent(templateType) : 'raw')
+      .set('x-cimpress-template-name', templateName ? encodeURIComponent(templateName) : '')
+      .set('x-cimpress-template-description', templateDescription ? encodeURIComponent(templateDescription) : '')
       .set('Accept', 'application/json')
       .send(bodyTemplate || '');
   }
