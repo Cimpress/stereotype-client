@@ -18,6 +18,7 @@ let templateName = 'testTemplate';
 let templBody = 'Hello {{name}}.';
 let templateType = 'text/x-handlebars-template';
 let contentType = 'text/x-handlebars-template; charset=utf-8; postProcessor=mjml';
+let templateDescription = 'this is test description';
 
 function getSampleTemplateResource(templateId, contentType) {
   let info = {
@@ -195,21 +196,27 @@ describe('Stereotype client', function() {
     it(`creates a new valid public ${isPublic} template PUT`, function() {
       nockRequest.put(`/v1/templates/${templateName}`)
         .matchHeader('x-cimpress-template-public', 'true')
+        .matchHeader('x-cimpress-template-type', encodeURIComponent(templateType))
+        .matchHeader('x-cimpress-template-name', encodeURIComponent(templateName))
+        .matchHeader('x-cimpress-template-description', encodeURIComponent(templateDescription))
         .reply(201);
 
-      return expect(client.putTemplateById(templateName, templBody, contentType, isPublic)).to.eventually.be.fulfilled;
+      return expect(client.putTemplateById(templateName, templBody, contentType, isPublic, templateType, templateName, templateDescription)).to.eventually.be.fulfilled;
     });
 
     it(`creates a new valid public ${isPublic} template POST`, function() {
       const templateId = 'mytemplateid';
       nockRequest.post(`/v1/templates`)
         .matchHeader('x-cimpress-template-public', 'true')
+        .matchHeader('x-cimpress-template-type', encodeURIComponent(templateType))
+        .matchHeader('x-cimpress-template-name', encodeURIComponent(templateName))
+        .matchHeader('x-cimpress-template-description', encodeURIComponent(templateDescription))
         .reply(201, getSampleTemplateResource(templateName), {
           'location': `/v1/templates/${templateId}`,
         });
 
       return client
-        .createTemplate(templBody, contentType, isPublic)
+        .createTemplate(templBody, contentType, isPublic, templateType, templateName, templateDescription)
         .then((templateInfo) => {
           expect(getSampleTemplateResource(templateName)).to.deep.equal(templateInfo)
         });
@@ -220,12 +227,15 @@ describe('Stereotype client', function() {
     it(`creates a new valid private (${isPublic}) template PUT`, function() {
       nockRequest
         .matchHeader('x-cimpress-template-public', 'false')
+        .matchHeader('x-cimpress-template-type', encodeURIComponent(templateType))
+        .matchHeader('x-cimpress-template-name', encodeURIComponent(templateName))
+        .matchHeader('x-cimpress-template-description', encodeURIComponent(templateDescription))
         .put(`/v1/templates/${templateName}`)
         .reply(201, getSampleTemplateResource(templateName), {
           'location': `/v1/templates/${templateName}`,
         });
 
-      return client.putTemplateById(templateName, templBody, contentType, isPublic)
+      return client.putTemplateById(templateName, templBody, contentType, isPublic, templateType, templateName, templateDescription)
         .then((templateInfo) => {
           expect(getSampleTemplateResource(templateName)).to.deep.equal(templateInfo)
         });
@@ -235,13 +245,16 @@ describe('Stereotype client', function() {
       const templateId = 'mytemplateid';
       nockRequest
         .matchHeader('x-cimpress-template-public', 'false')
+        .matchHeader('x-cimpress-template-type', encodeURIComponent(templateType))
+        .matchHeader('x-cimpress-template-name', encodeURIComponent(templateName))
+        .matchHeader('x-cimpress-template-description', encodeURIComponent(templateDescription))
         .post(`/v1/templates`)
         .reply(201, getSampleTemplateResource(templateId), {
           'location': `/v1/templates/${templateId}`,
         });
 
         return client
-          .createTemplate(templBody, contentType, isPublic)
+          .createTemplate(templBody, contentType, isPublic, templateType, templateName, templateDescription)
           .then((templateInfo) => {
             expect(getSampleTemplateResource(templateId)).to.deep.equal(templateInfo)
           });
@@ -253,8 +266,8 @@ describe('Stereotype client', function() {
       .reply(200, getSampleTemplateResource(templateName, contentType));
 
     return client
-      .putTemplateById(templateName, templBody, contentType)
-      .then(info => {
+      .putTemplateById(templateName, templBody, contentType, templateType, templateName, templateDescription)
+      .then((info) => {
         expect(getSampleTemplateResource(templateName, contentType)).to.deep.equal(info)
       });
   });
@@ -268,7 +281,7 @@ describe('Stereotype client', function() {
         });
 
       return client
-        .putTemplateById(templateName, templBody, fullContentType)
+        .putTemplateById(templateName, templBody, fullContentType, templateType, templateName, templateDescription)
         .then((templateInfo) => {
           expect(getSampleTemplateResource(templateName, fullContentType)).to.deep.equal(templateInfo)
         });
@@ -282,7 +295,7 @@ describe('Stereotype client', function() {
           'location': `/v1/templates/${templateName}`,
         });
 
-      return expect(client.putTemplateById(templateName, templBody, contentType + `; postProcessors=${pp}`)).to.eventually.be.rejected;
+      return expect(client.putTemplateById(templateName, templBody, contentType + `; postProcessors=${pp}`, templateType, templateName, templateDescription)).to.eventually.be.rejected;
     });
   });
 
@@ -291,14 +304,14 @@ describe('Stereotype client', function() {
     nockRequest.put(`/v1/templates/${noPermissionsTemplateId}`)
       .reply(403);
 
-    return expect(client.putTemplateById(noPermissionsTemplateId, templBody, contentType)).to.eventually.be.rejected;
+    return expect(client.putTemplateById(noPermissionsTemplateId, templBody, contentType, templateType, templateName, templateDescription)).to.eventually.be.rejected;
   });
 
   it('fails to create a template with bad permissions POST', function() {
     nockRequest.post(`/v1/templates`)
       .reply(403);
 
-    return expect(client.createTemplate(templBody, contentType)).to.eventually.be.rejected;
+    return expect(client.createTemplate(templBody, contentType, templateType, templateName, templateDescription)).to.eventually.be.rejected;
   });
 
   it('deletes a template', function() {
@@ -348,7 +361,9 @@ describe('Stereotype client', function() {
   it('materializes a template based on content', function() {
     let materializedTemplate = 'data data data';
     nockRequest.post(`/v1/materializations`)
-      .reply(200, materializedTemplate);
+      .reply(200, materializedTemplate, {
+        'Content-Type': 'text/handlebars',
+      });
 
     let propertyBag = {key: 'value'};
     let template = {
@@ -360,6 +375,7 @@ describe('Stereotype client', function() {
       .then((tpl) => expect(tpl).to.deep.equal({
       result: materializedTemplate,
       status: 200,
+      contentType: 'text/handlebars',
     }));
   });
 
