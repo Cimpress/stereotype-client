@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [6.0.0] - 2021.05.27
 - Added support to filter templates by template types.
 
+## [5.4.1] - 2021.05.27
+- Encode template metadata to support special characters
+
+## [5.4.0] - 2021.05.27
+- Send template metadata via headers for PUT endpoint
+- Add contentType to the response of materialization
+
 ## [5.3.0] - 2021.05.11
 - Removed support for ediecsv content type
 
