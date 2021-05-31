@@ -443,8 +443,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeById(templateId, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
-    return this.materializeSyncById(templateId, propertyBag, getMaterializationId, skipCache, templateContentType)
+  materializeById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
+    return this.materializeSyncById(templateId, propertyBag, getMaterializationId, skipCache)
       .then((resultStruct) => resultStruct.result);
   }
 
@@ -458,8 +458,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materialize(templateUrl, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
-    return this.materializeSync(templateUrl, propertyBag, getMaterializationId, skipCache, templateContentType)
+  materialize(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
+    return this.materializeSync(templateUrl, propertyBag, getMaterializationId, skipCache)
       .then((resultStruct) => resultStruct.result);
   }
 
@@ -555,9 +555,9 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeSyncById(templateId, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
+  materializeSyncById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
     const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
-    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache, templateContentType);
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache);
   }
 
   /**
@@ -571,8 +571,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeSync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
-    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache, templateContentType);
+  materializeSync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache);
   }
 
   /**
@@ -588,8 +588,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeAsync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
-    return this._materialize(templateUrl, propertyBag, getMaterializationId, true, skipCache, templateContentType);
+  materializeAsync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, true, skipCache);
   }
 
   _getUrl(path) {
@@ -607,7 +607,7 @@ class StereotypeClient {
     return templateUrl;
   }
 
-  _materialize(templateUrl, propertyBag, getMaterializationId = false, preferAsync = false, skipCache = false, templateContentType='') {
+  _materialize(templateUrl, propertyBag, getMaterializationId = false, preferAsync = false, skipCache = false) {
     // TODO: we have to store materialization link at template to avoid URL construction
     let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
     const parts = verifiedTemplateUrl.split('/');
@@ -657,10 +657,7 @@ class StereotypeClient {
         if (preferAsync) {
           req.set('prefer', 'respond-async');
         }
-        if (templateContentType) {
-          req.set('x-template-content-type', templateContentType);
-        }
-    
+  
         req.send(propertyBag)
           .then(
             (res) => {
