@@ -154,7 +154,7 @@ class StereotypeClient {
    * @param {boolean} skipCache
    * @param {boolean} includePublic
    */
-  listTemplates(skipCache = false, includePublic = false) {
+  listTemplates(skipCache = false, includePublic = false, templateTypes) {
     let self = this;
     let templatesUrl = this._getUrl('/v1/templates');
     return new Promise((resolve, reject) => {
@@ -170,6 +170,7 @@ class StereotypeClient {
         request
           .get(templatesUrl + `?${params}`)
           .set('Authorization', 'Bearer ' + self.accessToken)
+          .query({ templateType: templateTypes})
           .then(
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
@@ -442,8 +443,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this.materializeSyncById(templateId, propertyBag, getMaterializationId, skipCache)
+  materializeById(templateId, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
+    return this.materializeSyncById(templateId, propertyBag, getMaterializationId, skipCache, templateContentType)
       .then((resultStruct) => resultStruct.result);
   }
 
@@ -457,8 +458,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materialize(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this.materializeSync(templateUrl, propertyBag, getMaterializationId, skipCache)
+  materialize(templateUrl, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
+    return this.materializeSync(templateUrl, propertyBag, getMaterializationId, skipCache, templateContentType)
       .then((resultStruct) => resultStruct.result);
   }
 
@@ -554,9 +555,9 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeSyncById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
+  materializeSyncById(templateId, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
     const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
-    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache);
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache, templateContentType);
   }
 
   /**
@@ -570,8 +571,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeSync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache);
+  materializeSync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache, templateContentType);
   }
 
   /**
@@ -587,8 +588,8 @@ class StereotypeClient {
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
    */
-  materializeAsync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this._materialize(templateUrl, propertyBag, getMaterializationId, true, skipCache);
+  materializeAsync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false, templateContentType='') {
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, true, skipCache, templateContentType);
   }
 
   _getUrl(path) {
@@ -606,7 +607,7 @@ class StereotypeClient {
     return templateUrl;
   }
 
-  _materialize(templateUrl, propertyBag, getMaterializationId = false, preferAsync = false, skipCache = false) {
+  _materialize(templateUrl, propertyBag, getMaterializationId = false, preferAsync = false, skipCache = false, templateContentType='') {
     // TODO: we have to store materialization link at template to avoid URL construction
     let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
     const parts = verifiedTemplateUrl.split('/');
@@ -656,7 +657,10 @@ class StereotypeClient {
         if (preferAsync) {
           req.set('prefer', 'respond-async');
         }
-
+        if (templateContentType) {
+          req.set('x-template-content-type', templateContentType);
+        }
+    
         req.send(propertyBag)
           .then(
             (res) => {

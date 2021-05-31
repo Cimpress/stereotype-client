@@ -72,6 +72,50 @@ describe('Stereotype client', function() {
       });
   });
 
+  it('Filter templates by multiple template type',() => {
+    let templList = [{
+      templateId: 'templ1',
+      canCopy: true,
+      canEdit: true,
+    }, {
+      templateId: 'templ2',
+      canCopy: true,
+      canEdit: true,
+    }];
+
+    nockRequest.get(`/v1/templates?public=false&templateType=csvTemplate`)
+      .reply(200, templList, {
+        'content-type': 'application/json',
+      });
+
+    return client.listTemplates(undefined,undefined,'csvTemplate')
+      .then((list) => {
+        expect(JSON.stringify(list)).to.equal(JSON.stringify(templList));
+      });
+  })
+
+  it('Filter templates by multiple template types',() => {
+    let templList = [{
+      templateId: 'templ1',
+      canCopy: true,
+      canEdit: true,
+    }, {
+      templateId: 'templ2',
+      canCopy: true,
+      canEdit: true,
+    }];
+
+    nockRequest.get(`/v1/templates?public=false&templateType=xemail&templateType=csvTemplate`)
+      .reply(200, templList, {
+        'content-type': 'application/json',
+      });
+
+    return client.listTemplates(undefined,undefined,['xemail','csvTemplate'])
+      .then((list) => {
+        expect(JSON.stringify(list)).to.equal(JSON.stringify(templList));
+      });
+  })
+
   it('reads a template by id', function() {
     // Important: Mock the request with more headers first!
     nock(StereotypeOptions.baseUrl, {
