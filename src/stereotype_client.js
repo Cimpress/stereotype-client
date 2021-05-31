@@ -154,7 +154,7 @@ class StereotypeClient {
    * @param {boolean} skipCache
    * @param {boolean} includePublic
    */
-  listTemplates(skipCache = false, includePublic = false) {
+  listTemplates(skipCache = false, includePublic = false, templateTypes) {
     let self = this;
     let templatesUrl = this._getUrl('/v1/templates');
     return new Promise((resolve, reject) => {
@@ -170,6 +170,7 @@ class StereotypeClient {
         request
           .get(templatesUrl + `?${params}`)
           .set('Authorization', 'Bearer ' + self.accessToken)
+          .query({templateType: templateTypes})
           .then(
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
