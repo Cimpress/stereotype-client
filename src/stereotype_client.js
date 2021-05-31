@@ -170,7 +170,7 @@ class StereotypeClient {
         request
           .get(templatesUrl + `?${params}`)
           .set('Authorization', 'Bearer ' + self.accessToken)
-          .query({ templateType: templateTypes})
+          .query({templateType: templateTypes})
           .then(
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
@@ -657,7 +657,7 @@ class StereotypeClient {
         if (preferAsync) {
           req.set('prefer', 'respond-async');
         }
-  
+
         req.send(propertyBag)
           .then(
             (res) => {
