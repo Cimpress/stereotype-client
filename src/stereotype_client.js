@@ -487,9 +487,11 @@ class StereotypeClient {
    *    Defaults to false.
    * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
    *    Optional, defaults to false.
+   * @param {string} contentType Overrides the default request content type.
+   *    Optional, defaults to application/json
    */
-  materializeById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this.materializeSyncById(templateId, propertyBag, getMaterializationId, skipCache)
+  materializeById(templateId, propertyBag, getMaterializationId = false, skipCache = false, contentType = 'application/json') {
+    return this.materializeSyncById(templateId, propertyBag, getMaterializationId, skipCache, contentType)
       .then((resultStruct) => resultStruct.result);
   }
 
@@ -504,9 +506,11 @@ class StereotypeClient {
    *    Defaults to false.
    * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
    *    Optional, defaults to false.
+   * @param {string} contentType Overrides the default request content type.
+   *    Optional, defaults to application/json
    */
-  materialize(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this.materializeSync(templateUrl, propertyBag, getMaterializationId, skipCache)
+  materialize(templateUrl, propertyBag, getMaterializationId = false, skipCache = false, contentType = 'application/json') {
+    return this.materializeSync(templateUrl, propertyBag, getMaterializationId, skipCache, contentType)
       .then((resultStruct) => resultStruct.result);
   }
 
@@ -520,8 +524,10 @@ class StereotypeClient {
    * @param {boolean} preferAsync Return the materialization id instead of the materialization
    *    body. We can use that id later to fetch the materialized template without resending the properties.
    *    Defaults to false.
+   * @param {string} contentType Overrides the default request content type.
+   *    Optional, defaults to application/json
    */
-  materializeDirect(template, propertyBag, skipCache = false, preferAsync = false) {
+  materializeDirect(template, propertyBag, skipCache = false, preferAsync = false, contentType = 'application/json') {
     let self = this;
     let materializationsUrl = this._getUrl('/v1/materializations');
     return new Promise((resolve, reject) => {
@@ -537,7 +543,7 @@ class StereotypeClient {
           })
           .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
-          .set('Content-Type', 'application/json')
+          .set('Content-Type', contentType)
           .set('x-cimpress-link-timeout', self.timeout);
 
         if (self.blacklistHeader) {
@@ -607,9 +613,9 @@ class StereotypeClient {
    * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
    *    Optional, defaults to false.
    */
-  materializeSyncById(templateId, propertyBag, getMaterializationId = false, skipCache = false) {
+  materializeSyncById(templateId, propertyBag, getMaterializationId = false, skipCache = false, contentType = 'application/json') {
     const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
-    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache);
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache, contentType);
   }
 
   /**
@@ -624,9 +630,11 @@ class StereotypeClient {
    *    Defaults to false.
    * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
    *    Optional, defaults to false.
+   * @param {string} contentType Overrides the default request content type.
+   *    Optional, defaults to application/json
    */
-  materializeSync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache);
+  materializeSync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false, contentType = 'application/json') {
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, false, skipCache, contentType);
   }
 
   /**
@@ -643,9 +651,11 @@ class StereotypeClient {
    *    Defaults to false.
    * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
    *    Optional, defaults to false.
+   * @param {string} contentType Overrides the default request content type.
+   *    Optional, defaults to application/json
    */
-  materializeAsync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false) {
-    return this._materialize(templateUrl, propertyBag, getMaterializationId, true, skipCache);
+  materializeAsync(templateUrl, propertyBag, getMaterializationId = false, skipCache = false, contentType = 'application/json') {
+    return this._materialize(templateUrl, propertyBag, getMaterializationId, true, skipCache, contentType);
   }
 
   _getUrl(path) {
@@ -663,7 +673,7 @@ class StereotypeClient {
     return templateUrl;
   }
 
-  _materialize(templateUrl, propertyBag, getMaterializationId = false, preferAsync = false, skipCache = false) {
+  _materialize(templateUrl, propertyBag, getMaterializationId = false, preferAsync = false, skipCache = false, contentType = 'application/json') {
     // TODO: we have to store materialization link at template to avoid URL construction
     let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
     const parts = verifiedTemplateUrl.split('/');
@@ -684,7 +694,7 @@ class StereotypeClient {
           })
           .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
-          .set('Content-Type', 'application/json')
+          .set('Content-Type', contentType)
           .set('x-cimpress-link-timeout', self.timeout);
 
         if (self.isBinaryResponse) {
@@ -803,8 +813,10 @@ class StereotypeClient {
    * @param {object} propertyBag A JSON object that contains the data to be populated in a template.
    * @param {bool} skipCache Shows whether to explicitly bypass caching by adding a random query param.
    *    Optional, defaults to false.
+   * @param {string} contentType Overrides the default request content type.
+   *    Optional, defaults to application/json
    */
-  expand(propertyBag, skipCache = false) {
+  expand(propertyBag, skipCache = false, contentType = 'application/json') {
     let self = this;
     let expandUrl = this._getUrl('/v1/expand');
     return new Promise((resolve, reject) => {
@@ -820,7 +832,7 @@ class StereotypeClient {
           })
           .retry(self.numRetries)
           .set('Authorization', 'Bearer ' + self.accessToken)
-          .set('Content-Type', 'application/json')
+          .set('Content-Type', contentType)
           .set('x-cimpress-link-timeout', self.timeout);
 
         if (self.blacklistHeader) {

@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [6.0.1] - 2021.05.27
+## [6.1.1] - 2021.06.17
 # Fixed
 - Aligned how the library builds query strings in Node.js and browser environments
+
+## [6.1.0] - 2021.06.09
+- Added support to overriding the request content type. Default set to application/json
 
 ## [6.0.0] - 2021.05.27
 - Added support to filter templates by template types.
