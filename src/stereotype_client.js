@@ -167,7 +167,8 @@ class StereotypeClient {
         if (skipCache) {
           paramsObj.skip_cache = Math.random();
         }
-        let params = qs.stringify(paramsObj) + (templateTypes || []).map((type) => `templateType=${encodeURIComponent(type)}`).join('&');
+        let templateTypeParams = (templateTypes || []).map((type) => `templateType=${encodeURIComponent(type)}`);
+        let params = [qs.stringify(paramsObj), ...templateTypeParams].filter((p) => p).join('&');
         request
           .get(templatesUrl + `?${params}`)
           .set('Authorization', 'Bearer ' + self.accessToken)

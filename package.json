@@ -1,6 +1,6 @@
 {
   "name": "stereotype-client",
-  "version": "6.1.4",
+  "version": "6.1.5",
   "description": "A simple client for Cimpress' Stereotype service.",
   "scripts": {
     "test": "grunt test",
