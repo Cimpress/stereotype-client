@@ -167,11 +167,10 @@ class StereotypeClient {
         if (skipCache) {
           paramsObj.skip_cache = Math.random();
         }
-        let params = qs.stringify(paramsObj);
+        let params = qs.stringify(paramsObj) + (templateTypes || []).map((type) => `templateType=${encodeURIComponent(type)}`).join('&');
         request
           .get(templatesUrl + `?${params}`)
           .set('Authorization', 'Bearer ' + self.accessToken)
-          .query((templateTypes || []).map((type) => `templateType=${encodeURIComponent(type)}`).join('&'))
           .then(
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
