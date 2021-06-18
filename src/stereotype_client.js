@@ -153,6 +153,7 @@ class StereotypeClient {
    *
    * @param {boolean} skipCache
    * @param {boolean} includePublic
+   * @param {string[]} templateTypes
    */
   listTemplates(skipCache = false, includePublic = false, templateTypes) {
     let self = this;
@@ -170,7 +171,7 @@ class StereotypeClient {
         request
           .get(templatesUrl + `?${params}`)
           .set('Authorization', 'Bearer ' + self.accessToken)
-          .query({templateType: templateTypes})
+          .query((templateTypes || []).map((type) => `templateType=${encodeURIComponent(type)}`).join('&'))
           .then(
             (res) => {
               subsegment.addAnnotation('ResponseCode', res.status);
