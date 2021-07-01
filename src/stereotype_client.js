@@ -302,6 +302,7 @@ class StereotypeClient {
    * @param {string} templateType The type of the template, e.g. xemail, xcsv.
    * @param {string} templateName The name of the template.
    * @param {string} templateDescription The description of the template.
+   * @param {object[]} metadata The additional metadata about the template.
    */
   putTemplateById(
     templateId,
@@ -310,9 +311,10 @@ class StereotypeClient {
     isPublic = false,
     templateType = null,
     templateName = null,
-    templateDescription = null) {
+    templateDescription = null,
+    metadata = null) {
     const templateUrl = this._getUrl(`/v1/templates/${encodeURIComponent(templateId)}`);
-    return this.putTemplate(templateUrl, bodyTemplate, contentType, isPublic, templateType, templateName, templateDescription);
+    return this.putTemplate(templateUrl, bodyTemplate, contentType, isPublic, templateType, templateName, templateDescription, metadata);
   }
 
   /**
@@ -326,6 +328,7 @@ class StereotypeClient {
    * @param {string} templateType The type of the template, e.g. xemail, xcsv.
    * @param {string} templateName The name of the template.
    * @param {string} templateDescription The description of the template.
+   * @param {object[]} metadata The additional metadata about the template.
    */
   putTemplate(
     templateUrl,
@@ -334,7 +337,8 @@ class StereotypeClient {
     isPublic = false,
     templateType = null,
     templateName = null,
-    templateDescription = null) {
+    templateDescription = null,
+    metadata = null) {
     let verifiedTemplateUrl = this._verifyTemplateUrl('/v1/templates', templateUrl);
     return new Promise((resolve, reject) => {
       this.xray.captureAsyncFunc('Stereotype.putTemplate', (subsegment) => {
@@ -342,7 +346,8 @@ class StereotypeClient {
         subsegment.addAnnotation('RESTAction', 'PUT');
         subsegment.addAnnotation('Template', templateUrl);
 
-        this._createTemplate(verifiedTemplateUrl, 'PUT', bodyTemplate, contentType, isPublic, templateType, templateName, templateDescription)
+        this._createTemplate(verifiedTemplateUrl, 'PUT', bodyTemplate, contentType,
+          isPublic, templateType, templateName, templateDescription, metadata)
           .then((res) => {
             subsegment.addAnnotation('ResponseCode', res.status);
             subsegment.close();
@@ -365,8 +370,10 @@ class StereotypeClient {
     isPublic = false,
     templateType = null,
     templateName = null,
-    templateDescription = null) {
+    templateDescription = null,
+    metadata = null) {
     const isPublicFlag = isPublic && (isPublic.toString().toLowerCase() === 'true');
+    let metadataString = Array.isArray(metadata) ? JSON.stringify(metadata) : '';
 
     if (!['POST', 'PUT'].includes(method)) {
       return Promise.reject(new Error('You should pass POST or PUT for the method parameter'));
@@ -382,6 +389,7 @@ class StereotypeClient {
       .set('x-cimpress-template-type', templateType ? encodeURIComponent(templateType) : 'raw')
       .set('x-cimpress-template-name', templateName ? encodeURIComponent(templateName) : '')
       .set('x-cimpress-template-description', templateDescription ? encodeURIComponent(templateDescription) : '')
+      .set('x-cimpress-template-metadata', encodeURIComponent(metadataString))
       .set('Accept', 'application/json')
       .send(bodyTemplate || '');
   }
@@ -396,6 +404,7 @@ class StereotypeClient {
    * @param {string} templateType The type of the template, e.g. xemail, xcsv.
    * @param {string} templateName The name of the template.
    * @param {string} templateDescription The description of the template.
+   * @param {object[]} metadata The additional metadata about the template.
    */
   createTemplate(
     bodyTemplate = null,
@@ -403,14 +412,16 @@ class StereotypeClient {
     isPublic = false,
     templateType = null,
     templateName = null,
-    templateDescription = null) {
+    templateDescription = null,
+    metadata = null) {
     const templatesUrl = this._getUrl('/v1/templates');
     return new Promise((resolve, reject) => {
       this.xray.captureAsyncFunc('Stereotype.postTemplate', (subsegment) => {
         subsegment.addAnnotation('URL', templatesUrl);
         subsegment.addAnnotation('RESTAction', 'POST');
 
-        this._createTemplate(templatesUrl, 'POST', bodyTemplate, contentType, isPublic, templateType, templateName, templateDescription)
+        this._createTemplate(templatesUrl, 'POST', bodyTemplate, contentType, isPublic,
+          templateType, templateName, templateDescription, metadata)
         .then((res) => {
           subsegment.addAnnotation('ResponseCode', res.status);
           subsegment.addAnnotation('TemplateLocation', res.headers.location);
